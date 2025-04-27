@@ -7,9 +7,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EnableTransactionManagement
-@MapperScan("com.secondtrade.mapper")
+@MapperScan("com.secondtrade.dao")
 public class SecondTradeApplication {
     public static void main(String[] args) {
         SpringApplication.run(SecondTradeApplication.class, args);
     }
-} 
+}

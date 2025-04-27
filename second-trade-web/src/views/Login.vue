@@ -1,104 +1,106 @@
+<!-- 登录页面 -->
 <template>
-  <div class="login-container">
-    <div class="login-box">
-      <h2>登录</h2>
-      <el-form :model="loginForm" :rules="rules" ref="loginForm" class="login-form">
-        <el-form-item prop="username">
-          <el-input v-model="loginForm.username" prefix-icon="el-icon-user" placeholder="用户名"></el-input>
-        </el-form-item>
-        <el-form-item prop="password">
-          <el-input v-model="loginForm.password" prefix-icon="el-icon-lock" type="password" placeholder="密码"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleLogin" class="login-button">登录</el-button>
-        </el-form-item>
-        <div class="login-options">
-          <router-link to="/register">注册账号</router-link>
-          <a href="#">忘记密码？</a>
-        </div>
-      </el-form>
+    <div class="login-container">
+      <el-card class="login-card">
+        <template #header>
+          <div class="card-header">
+            <h2>用户登录</h2>
+          </div>
+        </template>
+        
+        <el-form :model="loginForm" :rules="rules" ref="loginFormRef" label-width="80px">
+          <el-form-item label="用户名" prop="username">
+            <el-input v-model="loginForm.username" placeholder="请输入用户名"></el-input>
+          </el-form-item>
+          
+          <el-form-item label="密码" prop="password">
+            <el-input v-model="loginForm.password" type="password" placeholder="请输入密码"></el-input>
+          </el-form-item>
+          
+          <el-form-item>
+            <el-button type="primary" @click="handleLogin" :loading="loading">登录</el-button>
+            <el-button @click="goToRegister">注册账号</el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
     </div>
-  </div>
-</template>
-
-<script>
-export default {
-  name: 'Login',
-  data() {
-    return {
-      loginForm: {
-        username: '',
-        password: ''
-      },
-      rules: {
-        username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' }
-        ],
-        password: [
-          { required: true, message: '请输入密码', trigger: 'blur' }
-        ]
-      }
-    }
-  },
-  methods: {
-    handleLogin() {
-      this.$refs.loginForm.validate(valid => {
-        if (valid) {
-          // 模拟登录成功
-          this.$message.success('登录成功！')
-          this.$router.push('/')
-        }
-      })
-    }
+  </template>
+  
+  <script setup>
+  import { ref, reactive } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { ElMessage } from 'element-plus'
+  import { login } from '@/api/user'
+  
+  const router = useRouter()
+  const loading = ref(false)
+  const loginFormRef = ref()
+  
+  const loginForm = reactive({
+    username: '',
+    password: ''
+  })
+  
+  const rules = {
+    username: [
+      { required: true, message: '请输入用户名', trigger: 'blur' }
+    ],
+    password: [
+      { required: true, message: '请输入密码', trigger: 'blur' }
+    ]
   }
-}
-</script>
-
-<style scoped>
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f5f5f5;
-}
-
-.login-box {
-  width: 400px;
-  padding: 40px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-}
-
-.login-box h2 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #409EFF;
-}
-
-.login-form {
-  margin-top: 20px;
-}
-
-.login-button {
-  width: 100%;
-  margin-top: 20px;
-}
-
-.login-options {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-  font-size: 14px;
-}
-
-.login-options a {
-  color: #409EFF;
-  text-decoration: none;
-}
-
-.login-options a:hover {
-  text-decoration: underline;
-}
-</style> 
+  
+  const handleLogin = async () => {
+    if (!loginFormRef.value) return
+    
+    await loginFormRef.value.validate(async (valid) => {
+      if (valid) {
+        loading.value = true
+        try {
+          const res = await login(loginForm)
+          if (res.success) {
+            // 存储用户信息
+            localStorage.setItem('userInfo', JSON.stringify(res.data))
+            ElMessage.success(res.message || '登录成功')
+            router.push('/')
+          } else {
+            ElMessage.error(res.message || '登录失败')
+          }
+        } catch (error) {
+          console.error('登录失败:', error)
+          ElMessage.error((error.response && error.response.data && error.response.data.message) || error.message || '登录失败')
+        } finally {
+          loading.value = false
+        }
+      }
+    })
+  }
+  
+  
+  const goToRegister = () => {
+    router.push('/register')
+  }
+  </script>
+  
+  <style scoped>
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f5f5f5;
+  }
+  
+  .login-card {
+    width: 480px;
+  }
+  
+  .card-header {
+    text-align: center;
+  }
+  
+  .el-button {
+    width: 100%;
+    margin-top: 10px;
+  }
+  </style>

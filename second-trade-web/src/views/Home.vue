@@ -53,77 +53,47 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Home',
-  data() {
-    return {
-      carouselItems: [
-        {
-          image: require('@/assets/carousel/1.jpg'),
-          title: '新品上市',
-          description: '最新商品，限时优惠'
-        },
-        {
-          image: require('@/assets/carousel/2.jpg'),
-          title: '特惠活动',
-          description: '全场商品，低至5折'
-        },
-        {
-          image: require('@/assets/carousel/3.jpg'),
-          title: '品质保证',
-          description: '正品保障，假一赔十'
-        }
-      ],
-      categories: [
-        { name: '电子产品' },
-        { name: '服装服饰' },
-        { name: '图书教材' },
-        { name: '生活用品' },
-        { name: '运动器材' }
-      ],
-      products: [
-        {
-          name: 'iPhone 13 Pro',
-          price: 6999,
-          image: require('@/assets/products/iphone.jpg'),
-          merchant: 'Apple官方旗舰店'
-        }
-        // {
-        //   name: 'MacBook Pro',
-        //   price: 12999,
-        //   image: require('@/assets/products/macbook.jpg'),
-        //   merchant: 'Apple官方旗舰店'
-        // },
-        // {
-        //   name: 'AirPods Pro',
-        //   price: 1999,
-        //   image: require('@/assets/products/airpods.jpg'),
-        //   merchant: 'Apple官方旗舰店'
-        // },
-        // {
-        //   name: 'iPad Pro',
-        //   price: 5999,
-        //   image: require('@/assets/products/ipad.jpg'),
-        //   merchant: 'Apple官方旗舰店'
-        // }
-      ]
-    }
-  },
-  methods: {
-    handleLogin() {
-      this.$router.push('/login')
-    },
-    handleCategoryClick(category) {
-      // 处理分类点击事件
-      console.log('Selected category:', category)
-    },
-    handleProductClick(product) {
-      // 处理商品点击事件
-      console.log('Selected product:', product)
-    }
-  }
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+import img1 from '@/assets/carousel/1.jpg'
+import img2 from '@/assets/carousel/2.jpg'
+import img3 from '@/assets/carousel/3.jpg'
+import iphoneImg from '@/assets/products/iphone.jpg'
+
+const router = useRouter()
+
+const carouselItems = ref([
+  { image: img1, title: '新品上市', description: '最新商品，限时优惠' },
+  { image: img2, title: '特惠活动', description: '全场商品，低至5折' },
+  { image: img3, title: '品质保证', description: '正品保障，假一赔十' }
+])
+
+const categories = ref([
+  { name: '电子产品' },
+  { name: '服装服饰' },
+  { name: '图书教材' },
+  { name: '生活用品' },
+  { name: '运动器材' }
+])
+
+const products = ref([
+  { name: 'iPhone 13 Pro', price: 6999, image: iphoneImg, merchant: 'Apple官方旗舰店' }
+  // 其他商品可按需添加
+])
+
+function handleLogin() {
+  router.push('/login')
 }
+function handleCategoryClick(category) {
+  console.log('Selected category:', category)
+}
+function handleProductClick(product) {
+  console.log('Selected product:', product)
+}
+
+const imgUrl = new URL('@/assets/carousel/1.jpg', import.meta.url).href
 </script>
 
 <style scoped>

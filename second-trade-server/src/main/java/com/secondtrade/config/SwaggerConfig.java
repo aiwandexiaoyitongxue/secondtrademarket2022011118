@@ -20,7 +20,7 @@ public class SwaggerConfig {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("com.secondtrade.controller"))
+                .apis(RequestHandlerSelectors.basePackage("com.secondtrade.webcontroller"))
                 .paths(PathSelectors.any())
                 .build();
     }
@@ -33,4 +33,4 @@ public class SwaggerConfig {
                 .version("1.0.0")
                 .build();
     }
-} 
+}
