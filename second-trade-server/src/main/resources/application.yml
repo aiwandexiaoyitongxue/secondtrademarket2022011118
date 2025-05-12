@@ -1,14 +1,10 @@
-server:
-  port: 8080
-  servlet:
-    context-path: /api
-    encoding:
-      charset: UTF-8
-      force: true
-
 spring:
   application:
     name: second-trade-server
+  
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   
   # 数据源配置
   datasource:
@@ -52,4 +48,4 @@ knife4j:
     enableDocumentManage: true
     swaggerModelName: 实体类列表
     basic:
-      enable: false 
+      enable: false
