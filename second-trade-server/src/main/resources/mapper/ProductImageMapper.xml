@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.secondtrade.mapper.ProductImageMapper">
+    <!-- 批量插入商品图片 -->
+    <insert id="insertBatch">
+        INSERT INTO product_image (
+            product_id, url, is_main, created_time, updated_time, deleted
+        ) VALUES 
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.productId}, #{item.url}, #{item.isMain},
+                NOW(), NOW(), 0
+            )
+        </foreach>
+    </insert>
+</mapper> 
