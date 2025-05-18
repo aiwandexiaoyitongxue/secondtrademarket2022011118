@@ -265,6 +265,21 @@ const categoryOptions = [
       { value: 11, label: '女装' },
       { value: 12, label: '鞋靴' }
     ]
+  },
+  {
+    value: 3,
+    label: '图书教材',
+    children: []
+  },
+  {
+    value: 4,
+    label: '生活用品',
+    children: []
+  },
+  {
+    value: 5,
+    label: '运动器材',
+    children: []
   }
 ]
 

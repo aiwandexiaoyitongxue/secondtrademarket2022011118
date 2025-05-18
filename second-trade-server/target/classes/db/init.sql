@@ -291,3 +291,30 @@ INSERT INTO `system_config` (`config_key`, `config_value`, `config_type`, `descr
 ('AUTO_CONFIRM_DAYS', '7', 2, '自动确认收货天数'),
 ('MIN_WITHDRAW_AMOUNT', '100', 2, '最小提现金额'),
 ('MAX_WITHDRAW_AMOUNT', '50000', 2, '最大提现金额');
+
+
+
+//测试订单
+INSERT INTO `product_order` (
+    `order_no`,
+    `user_id`,
+    `merchant_id`,
+    `total_amount`,
+    `pay_amount`,
+    `status`,
+    `auto_confirm_days`,
+    `created_time`,
+    `updated_time`,
+    `deleted`
+) VALUES (
+    CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'), FLOOR(RAND() * 1000)),
+    1,
+    3,
+    0.00,  -- 临时设置为0，后面会根据订单项更新
+    0.00,  -- 临时设置为0，后面会根据订单项更新
+    1,     -- 1表示待发货
+    7,     -- 默认7天自动确认
+    NOW(),
+    NOW(),
+    0
+);
