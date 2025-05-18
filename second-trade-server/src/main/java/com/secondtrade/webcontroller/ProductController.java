@@ -38,9 +38,12 @@ public class ProductController extends BaseController {
     @GetMapping("/list")
     public Result<List<Product>> getProductList(@RequestParam(required = false) Long categoryId,
                                               @RequestParam(required = false) String keyword,
+                                              @RequestParam(required = false) Long merchantId,
+                                              @RequestParam(required = false) Integer status,
+                                              @RequestParam(required = false) Integer excludeStatus,
                                               @RequestParam(defaultValue = "1") Integer page,
                                               @RequestParam(defaultValue = "10") Integer size) {
-        return Result.success(productService.getProductList(categoryId, keyword, page, size));
+        return Result.success(productService.getProductList(categoryId, keyword, merchantId, status, excludeStatus, page, size));
     }
 
     @ApiOperation("获取商品详情")
@@ -59,7 +62,15 @@ public class ProductController extends BaseController {
     @ApiOperation("删除商品")
     @DeleteMapping("/{id}")
     public Result<Void> deleteProduct(@PathVariable Long id) {
+        try {
+            System.out.println("接收到删除商品请求，商品ID: " + id);
         productService.deleteProduct(id);
+            System.out.println("商品删除成功，ID: " + id);
         return Result.success(null);
+        } catch (Exception e) {
+            System.err.println("删除商品请求处理异常: " + e.getMessage());
+            e.printStackTrace();
+            return Result.error("删除商品失败: " + e.getMessage());
+        }
     }
 } 

@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @TableName("product")
@@ -28,12 +29,15 @@ public class Product {
     
     private Integer sales;
     
+    @TableField(value = "`condition`")
     private Integer condition;
     
+    @TableField(value = "`size`")
     private String size;
     
     private Integer isNegotiable;
     
+    @TableField(value = "`status`")
     private Integer status;
     
     @TableField(fill = FieldFill.INSERT)
@@ -44,4 +48,7 @@ public class Product {
     
     @TableLogic
     private Integer deleted;
+    
+    @TableField(exist = false)
+    private List<ProductImage> productImages;
 } 

@@ -20,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.PostConstruct;
 
+import java.io.File;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.math.BigDecimal;
@@ -46,6 +48,38 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @PostConstruct
     public void init() {
         System.out.println("ProductServiceImpl initialized");
+        System.out.println("上传目录配置: " + uploadDir);
+        
+        if (uploadDir == null || uploadDir.trim().isEmpty()) {
+            System.err.println("警告: 上传目录未配置，将使用默认目录");
+            uploadDir = System.getProperty("user.dir") + "/uploads";
+        }
+        
+        // 确保上传目录存在
+        File dir = new File(uploadDir);
+        if (!dir.exists()) {
+            boolean created = dir.mkdirs();
+            System.out.println("创建上传目录结果: " + (created ? "成功" : "失败"));
+            
+            if (!created) {
+                System.err.println("无法创建上传目录，将尝试创建临时目录");
+                try {
+                    dir = new File(System.getProperty("java.io.tmpdir"), "second-trade-uploads");
+                    if (!dir.exists()) {
+                        created = dir.mkdirs();
+                    }
+                    uploadDir = dir.getAbsolutePath();
+                    System.out.println("使用临时目录作为上传目录: " + uploadDir);
+                } catch (Exception e) {
+                    System.err.println("创建临时上传目录失败: " + e.getMessage());
+                }
+            }
+        }
+        
+        // 检查目录是否可写
+        if (!dir.canWrite()) {
+            System.err.println("警告: 上传目录不可写: " + uploadDir);
+        }
     }
 
     @Override
@@ -105,27 +139,51 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             // 处理商品图片
             if (images != null && !images.isEmpty()) {
                 System.out.println("开始处理商品图片，图片数量: " + images.size());
-                List<ProductImage> productImages = images.stream()
-                    .map(file -> {
-                        try {
-                            String url = FileUtil.uploadFile(file, uploadDir);
-                            ProductImage image = new ProductImage();
-                            image.setProductId(product.getId());
-                            image.setUrl(url);
-                            image.setIsMain(images.indexOf(file) == 0);
-                            return image;
-                        } catch (Exception e) {
-                            System.err.println("上传图片失败: " + e.getMessage());
-                            throw new RuntimeException("上传图片失败", e);
-                        }
-                    })
-                    .collect(Collectors.toList());
                 
+                // 使用ArrayList代替stream，便于错误处理
+                List<ProductImage> productImages = new ArrayList<>();
+                
+                for (int i = 0; i < images.size(); i++) {
+                    MultipartFile file = images.get(i);
+                    
+                    try {
+                        if (file.isEmpty()) {
+                            System.out.println("跳过空文件");
+                            continue;
+                        }
+                        
+                        System.out.println("处理第" + (i+1) + "张图片: " + file.getOriginalFilename() + ", 大小: " + file.getSize() + "字节");
+                        String url = FileUtil.uploadFile(file, uploadDir);
+                        
+                        ProductImage image = new ProductImage();
+                        image.setProductId(product.getId());
+                        image.setUrl(url);
+                        image.setIsMain(i == 0); // 第一张为主图
+                        image.setCreatedTime(now);
+                        image.setUpdatedTime(now);
+                        image.setDeleted(0);
+                        
+                        productImages.add(image);
+                        System.out.println("图片上传成功: " + url);
+                    } catch (Exception e) {
+                        System.err.println("处理图片失败: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+                
+                if (productImages.isEmpty()) {
+                    throw new RuntimeException("没有成功上传的图片");
+                }
+                
+                System.out.println("准备保存" + productImages.size() + "张商品图片");
                 boolean batchSaveResult = productImageService.saveBatch(productImages);
+                
                 if (!batchSaveResult) {
                     throw new RuntimeException("保存商品图片失败");
                 }
                 System.out.println("商品图片保存完成");
+            } else {
+                System.out.println("没有图片需要处理");
             }
         } catch (Exception e) {
             System.err.println("发布商品失败: " + e.getMessage());
@@ -135,14 +193,25 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     @Override
-    public List<Product> getProductList(Long categoryId, String keyword, Integer page, Integer size) {
+    public List<Product> getProductList(Long categoryId, String keyword, Long merchantId, Integer status, Integer excludeStatus, Integer page, Integer size) {
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(categoryId != null, Product::getCategoryId, categoryId)
-               .like(keyword != null, Product::getName, keyword)
+               .eq(merchantId != null, Product::getMerchantId, merchantId)
+               .eq(status != null, Product::getStatus, status)
+               .ne(excludeStatus != null, Product::getStatus, excludeStatus)
+               .like(keyword != null && !keyword.isEmpty(), Product::getName, keyword)
                .orderByDesc(Product::getCreatedTime);
         
         Page<Product> pageParam = new Page<>(page, size);
-        return page(pageParam, wrapper).getRecords();
+        List<Product> products = page(pageParam, wrapper).getRecords();
+        
+        // 为每个商品获取图片信息
+        for (Product product : products) {
+            List<ProductImage> images = productImageService.findByProductId(product.getId());
+            product.setProductImages(images);
+        }
+        
+        return products;
     }
 
     @Override
@@ -158,24 +227,69 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void deleteProduct(Long id) {
-        removeById(id);
-        // 删除商品相关的图片
-        productImageService.removeByProductId(id);
+        try {
+            System.out.println("开始删除商品，ID: " + id);
+            
+            // 检查商品是否存在
+            Product product = getById(id);
+            if (product == null) {
+                System.err.println("要删除的商品不存在，ID: " + id);
+                throw new RuntimeException("商品不存在，ID: " + id);
+            }
+            
+            System.out.println("商品信息: " + product);
+            
+            // 先删除商品相关的图片
+            try {
+                System.out.println("删除商品关联的图片，商品ID: " + id);
+                productImageService.removeByProductId(id);
+                System.out.println("商品图片删除成功");
+            } catch (Exception e) {
+                System.err.println("删除商品图片失败: " + e.getMessage());
+                e.printStackTrace();
+                // 继续删除商品，不因图片删除失败而中断
+            }
+            
+            // 设置更新时间
+            product.setUpdatedTime(LocalDateTime.now());
+            
+            // 删除商品记录
+            boolean result = removeById(id);
+            System.out.println("商品记录删除结果: " + (result ? "成功" : "失败"));
+            
+            if (!result) {
+                throw new RuntimeException("删除商品记录失败，ID: " + id);
+            }
+            
+            System.out.println("商品删除完成，ID: " + id);
+        } catch (Exception e) {
+            System.err.println("删除商品异常: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     private boolean validateMerchant(Long merchantId) {
         if (merchantId == null) {
+            System.out.println("验证失败：商家ID为空");
             return false;
         }
-        return merchantService.getById(merchantId) != null;
+        
+        boolean exists = merchantService.getById(merchantId) != null;
+        System.out.println("验证商家ID " + merchantId + ": " + (exists ? "存在" : "不存在"));
+        return exists;
     }
     
     private boolean validateCategory(Long categoryId) {
         if (categoryId == null) {
+            System.out.println("验证失败：分类ID为空");
             return false;
         }
-        return categoryService.getById(categoryId) != null;
+        
+        boolean exists = categoryService.getById(categoryId) != null;
+        System.out.println("验证分类ID " + categoryId + ": " + (exists ? "存在" : "不存在"));
+        return exists;
     }
 } 

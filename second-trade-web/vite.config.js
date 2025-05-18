@@ -7,18 +7,16 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src'),
+      'vue': 'vue/dist/vue.esm-bundler.js'
     }
   },
   server: {
     port: 5173,
     proxy: {
-      '/api': {
+      '/user': {
         target: 'http://localhost:8080',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-        secure: false,
-        ws: true
+        changeOrigin: true
       }
     }
   }

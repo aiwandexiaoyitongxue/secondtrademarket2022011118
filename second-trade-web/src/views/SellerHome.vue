@@ -5,7 +5,11 @@
       <el-menu :default-active="activeMenu" class="el-menu-vertical-demo" @select="handleMenuSelect">
         <el-menu-item index="overview"><el-icon><HomeFilled /></el-icon>首页</el-menu-item>
         <el-sub-menu index="product">
-          <template #title><el-icon><GoodsFilled /></el-icon>商品橱窗</template>
+          <template #title>
+            <div @click.stop="handleProductClick">
+              <el-icon><GoodsFilled /></el-icon>商品橱窗
+            </div>
+          </template>
           <el-menu-item index="publish">发布商品</el-menu-item>
           <el-menu-item index="unpublish">已下架商品</el-menu-item>
         </el-sub-menu>
@@ -22,21 +26,23 @@
 
     <!-- 主内容区 -->
     <el-main style="background: #f5f7fa;">
-      <component :is="currentView" />
+      <component :is="currentView" @update:activeMenu="handleMenuSelect" />
     </el-main>
   </el-container>
 </template>
 
 <script setup>
-import { ref, computed, reactive, defineComponent } from 'vue'
+import { ref, computed, reactive, defineComponent, provide, h } from 'vue'
 import { HomeFilled, GoodsFilled, List, StarFilled, Medal, Plus } from '@element-plus/icons-vue'
 import PublishProduct from './seller/PublishProduct.vue'
+import ProductShowcase from './seller/ProductShowcase.vue'
 
 // 导航状态
 const activeMenu = ref('overview')
 const currentView = computed(() => {
   switch (activeMenu.value) {
     case 'overview': return Overview
+    case 'product': return ProductShowcase
     case 'publish': return PublishProduct
     case 'unpublish': return UnpublishProduct
     case 'ship': return ShipOrder
@@ -47,20 +53,36 @@ const currentView = computed(() => {
     default: return Overview
   }
 })
+
 function handleMenuSelect(index) {
   activeMenu.value = index
+}
+
+// 商品橱窗菜单点击处理
+function handleProductClick() {
+  activeMenu.value = 'product'
 }
 
 // 以下为各功能区组件（可拆分到单独文件）
 const Overview = {
   template: `<el-card><h2>欢迎来到商家中心</h2><p>这里可以管理您的商品、订单、评价和等级。</p></el-card>`
 }
+
+// 已下架商品组件 - 复用ProductShowcase但只显示已下架商品
 const UnpublishProduct = {
-  template: `<el-card><h3>已下架商品</h3><p>管理下架操作，普通用户无法浏览。</p></el-card>`
+  setup() {
+    // 通过provide向下传递预设的筛选条件，只显示已下架状态
+    provide('defaultStatus', 2); // 2表示已下架状态
+    provide('showTitle', '已下架商品'); // 自定义标题
+    provide('hideStatusFilter', true); // 隐藏状态过滤标签
+    return () => h(ProductShowcase);
+  }
 }
+
 const ShipOrder = {
   template: `<el-card><h3>发货</h3><p>买家付款后，进行发货操作。</p></el-card>`
 }
+
 const ReceivePayment = {
   template: `<el-card><h3>已卖出宝贝</h3><p>买家点击收货后，卖家收到货款（扣除平台费用）。</p></el-card>`
 }

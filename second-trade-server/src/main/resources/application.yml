@@ -5,22 +5,32 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-  
-  # 数据源配置
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/2022011118?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
-    password: 123456
+    password: F20040411
   
-  # Redis配置
   redis:
     host: localhost
     port: 6379
     database: 0
     timeout: 10s
+    
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
 
-# MyBatis Plus配置
+server:
+  port: 8081
+
+# 文件上传配置
+upload:
+  dir: ${user.dir}/uploads/images
+
+# MyBatis-Plus配置
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.secondtrade.entity
@@ -29,14 +39,14 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
-      id-type: auto
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+      id-type: auto
 
 # JWT配置
 jwt:
-  secret: your-secret-key
+  secret: secondtradeplatformsecurityjwtsecretkeyhmacsha256
   expiration: 86400000  # 24小时
 
 # Knife4j配置

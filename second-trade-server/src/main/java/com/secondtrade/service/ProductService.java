@@ -9,7 +9,7 @@ import java.util.List;
 public interface ProductService {
     void publishProduct(String productJson, List<MultipartFile> images) throws JsonProcessingException;
     
-    List<Product> getProductList(Long categoryId, String keyword, Integer page, Integer size);
+    List<Product> getProductList(Long categoryId, String keyword, Long merchantId, Integer status, Integer excludeStatus, Integer page, Integer size);
     
     Product getProductDetail(Long id);
     

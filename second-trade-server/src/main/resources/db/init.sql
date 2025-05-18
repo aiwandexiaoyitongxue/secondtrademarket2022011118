@@ -291,4 +291,3 @@ INSERT INTO `system_config` (`config_key`, `config_value`, `config_type`, `descr
 ('AUTO_CONFIRM_DAYS', '7', 2, '自动确认收货天数'),
 ('MIN_WITHDRAW_AMOUNT', '100', 2, '最小提现金额'),
 ('MAX_WITHDRAW_AMOUNT', '50000', 2, '最大提现金额');
-SHOW TABLES; 
