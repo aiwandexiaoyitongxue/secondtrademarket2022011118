@@ -31,6 +31,6 @@ export function updateOrderStatus(id, status) {
   return request({
     url: `/api/orders/${id}/status`,
     method: 'put',
-    data: { status }
+    params: { status }
   })
 } 

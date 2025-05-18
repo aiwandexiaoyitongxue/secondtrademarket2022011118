@@ -4,18 +4,25 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.secondtrade.entity.Order;
+import com.secondtrade.entity.OrderItem;
 import com.secondtrade.mapper.OrderMapper;
+import com.secondtrade.mapper.OrderItemMapper;
 import com.secondtrade.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
+
+    @Autowired
+    private OrderItemMapper orderItemMapper;
 
     @Override
     public Page<Order> getOrderList(Long merchantId, String orderNo, Integer status, 
@@ -47,7 +54,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     public Order getOrderDetail(Long id) {
-        return getById(id);
+        Order order = getById(id);
+        if (order != null) {
+            // 查询订单项
+            List<OrderItem> items = orderItemMapper.selectList(new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id));
+            order.setOrderItems(items);
+        }
+        return order;
     }
 
     @Override

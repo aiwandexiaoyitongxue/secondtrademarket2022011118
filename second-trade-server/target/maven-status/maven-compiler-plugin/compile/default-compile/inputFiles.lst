@@ -3,6 +3,7 @@ C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\se
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\impl\ProductImageServiceImpl.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\impl\ProductServiceImpl.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\webcontroller\AuthController.java
+C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\entity\OrderItem.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\MerchantService.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\ProductImageService.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\entity\User.java
@@ -21,8 +22,11 @@ C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\se
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\webcontroller\ProductController.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\entity\Merchant.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\UserService.java
+C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\mapper\OrderMapper.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\mapper\ProductMapper.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\impl\CategoryServiceImpl.java
+C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\OrderService.java
+C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\webcontroller\OrderController.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\common\constants\Constants.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\entity\Product.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\ProductService.java
@@ -32,10 +36,13 @@ C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\se
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\impl\MerchantServiceImpl.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\config\SecurityConfig.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\mapper\CategoryMapper.java
+C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\mapper\OrderItemMapper.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\mapper\ProductImageMapper.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\util\FileUtil.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\webcontroller\BaseController.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\common\result\Result.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\common\utils\CommonUtils.java
+C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\impl\OrderServiceImpl.java
+C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\entity\Order.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\common\Result.java
 C:\Users\冯语桐\Desktop\study\Git_collaborator\secondtrademarket2022011118\second-trade-server\src\main\java\com\secondtrade\service\impl\UserServiceImpl.java

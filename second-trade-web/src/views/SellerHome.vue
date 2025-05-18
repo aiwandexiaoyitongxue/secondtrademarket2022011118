@@ -28,7 +28,7 @@
             <span>订单交易</span>
           </template>
           <el-menu-item index="ship">发货</el-menu-item>
-          <el-menu-item index="receive">已卖出宝贝</el-menu-item>
+          <el-menu-item index="order-manage">订单管理</el-menu-item>
           <el-menu-item index="refund">售后服务</el-menu-item>
         </el-sub-menu>
         
@@ -74,9 +74,29 @@ const currentView = computed(() => {
     case 'publish': return PublishProduct
     case 'unpublish': return UnpublishProduct
     case 'ship': 
-    case 'receive': 
+      return defineComponent({
+        name: 'ShipOrder',
+        setup() {
+          provide('currentMenu', 'ship')
+          return () => h(OrderTransaction)
+        }
+      })
+    case 'order-manage': 
+      return defineComponent({
+        name: 'OrderManage',
+        setup() {
+          provide('currentMenu', 'order-manage')
+          return () => h(OrderTransaction)
+        }
+      })
     case 'refund': 
-      return OrderTransaction
+      return defineComponent({
+        name: 'RefundOrder',
+        setup() {
+          provide('currentMenu', 'refund')
+          return () => h(OrderTransaction)
+        }
+      })
     case 'review': return BuyerReview
     case 'level': return SellerLevel
     default: return Overview

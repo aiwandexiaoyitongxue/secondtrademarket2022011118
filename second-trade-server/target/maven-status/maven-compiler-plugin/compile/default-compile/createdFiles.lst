@@ -12,6 +12,7 @@ com\secondtrade\service\impl\ProductServiceImpl.class
 com\secondtrade\mapper\MerchantMapper.class
 com\secondtrade\util\JwtUtil.class
 com\secondtrade\config\MybatisPlusConfig.class
+com\secondtrade\mapper\OrderItemMapper.class
 com\secondtrade\mapper\OrderMapper.class
 com\secondtrade\webcontroller\AuthController.class
 com\secondtrade\entity\User.class

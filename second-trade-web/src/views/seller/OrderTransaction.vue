@@ -5,17 +5,31 @@
         <h3>订单筛选</h3>
       </div>
       <el-form :inline="true" :model="searchForm" class="search-form">
-        <el-form-item label="订单状态">
-          <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <el-option label="全部" :value="-1"></el-option>
-            <el-option label="待付款" :value="0"></el-option>
-            <el-option label="待发货" :value="1"></el-option>
-            <el-option label="待收货" :value="2"></el-option>
-            <el-option label="已完成" :value="3"></el-option>
-            <el-option label="已取消" :value="4"></el-option>
-            <el-option label="已退款" :value="5"></el-option>
-          </el-select>
-        </el-form-item>
+        <!-- 发货页面只显示订单编号搜索 -->
+        <template v-if="currentMenu === 'ship'">
+          <el-form-item label="订单编号">
+            <el-input v-model="searchForm.orderNo" placeholder="请输入订单编号" clearable></el-input>
+          </el-form-item>
+        </template>
+        
+        <!-- 订单管理页面显示状态筛选和订单编号搜索 -->
+        <template v-else-if="currentMenu === 'order-manage'">
+          <el-form-item label="订单状态">
+            <el-select v-model="searchForm.status" placeholder="请选择状态" style="width: 180px">
+              <el-option label="全部" :value="-1"></el-option>
+              <el-option label="待付款" :value="0"></el-option>
+              <el-option label="待发货" :value="1"></el-option>
+              <el-option label="待收货" :value="2"></el-option>
+              <el-option label="已完成" :value="3"></el-option>
+              <el-option label="已取消" :value="4"></el-option>
+              <el-option label="已退款" :value="5"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="订单编号">
+            <el-input v-model="searchForm.orderNo" placeholder="请输入订单编号" clearable></el-input>
+          </el-form-item>
+        </template>
+        
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="resetSearch">重置</el-button>
@@ -82,14 +96,43 @@
         />
       </div>
     </el-card>
+
+    <!-- 订单详情弹窗 -->
+    <el-dialog v-model="detailDialogVisible" title="订单详情" width="600px" :close-on-click-modal="false">
+      <div v-if="currentOrder">
+        <div style="margin-bottom: 10px;">
+          <strong>订单编号：</strong>{{ currentOrder.orderNo }}<br>
+          <strong>创建时间：</strong>{{ formatDate(currentOrder.createdTime) }}<br>
+          <strong>订单金额：</strong>¥{{ currentOrder.totalAmount?.toFixed(2) }}<br>
+          <strong>订单状态：</strong>{{ getStatusText(currentOrder.status) }}
+        </div>
+        <el-table :data="currentOrder.orderItems || []" size="small" border style="margin-bottom: 10px;">
+          <el-table-column prop="productName" label="商品名称" />
+          <el-table-column prop="quantity" label="数量" width="60" />
+          <el-table-column prop="price" label="单价" width="80">
+            <template #default="scope">¥{{ scope.row.price?.toFixed(2) }}</template>
+          </el-table-column>
+          <el-table-column prop="totalAmount" label="小计" width="80">
+            <template #default="scope">¥{{ scope.row.totalAmount?.toFixed(2) }}</template>
+          </el-table-column>
+        </el-table>
+        <!-- 仅待发货状态下显示发货按钮 -->
+        <div v-if="currentOrder.status === 1">
+          <el-button type="primary" @click="confirmDelivery">确认发货</el-button>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="detailDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, inject } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getOrderList } from '@/api/order'
+import { getOrderList, getOrderDetail, updateOrderStatus } from '@/api/order'
 
 const route = useRoute()
 const loading = ref(false)
@@ -98,19 +141,14 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-// 根据当前路由确定页面标题和默认状态
-const currentMenu = computed(() => {
-  const path = route.path
-  if (path.includes('ship')) return 'ship'
-  if (path.includes('receive')) return 'receive'
-  if (path.includes('refund')) return 'refund'
-  return 'ship'
-})
+// 使用注入的 currentMenu
+const currentMenu = inject('currentMenu', 'ship')
 
+// 根据当前菜单确定页面标题
 const pageTitle = computed(() => {
-  switch (currentMenu.value) {
+  switch (currentMenu) {
     case 'ship': return '待发货订单'
-    case 'receive': return '已卖出宝贝'
+    case 'order-manage': return '订单管理'
     case 'refund': return '售后服务'
     default: return '订单列表'
   }
@@ -119,6 +157,7 @@ const pageTitle = computed(() => {
 // 搜索表单
 const searchForm = reactive({
   status: -1,
+  orderNo: '',
   merchantId: null
 })
 
@@ -171,17 +210,25 @@ const loadOrderList = async () => {
     const params = {
       page: currentPage.value,
       size: pageSize.value,
-      merchantId: searchForm.merchantId,
-      status: searchForm.status === -1 ? undefined : searchForm.status
+      merchantId: searchForm.merchantId
     }
     
-    // 根据当前菜单设置默认状态
-    if (currentMenu.value === 'ship') {
-      params.status = 1 // 待发货
-    } else if (currentMenu.value === 'receive') {
-      params.status = 2 // 待收货
-    } else if (currentMenu.value === 'refund') {
-      params.status = 5 // 已退款
+    // 根据当前菜单设置查询参数
+    if (currentMenu === 'ship') {
+      // 发货页面固定状态为待发货，添加订单编号搜索
+      params.status = 1
+      if (searchForm.orderNo) {
+        params.orderNo = searchForm.orderNo
+      }
+    } else if (currentMenu === 'order-manage') {
+      // 订单管理页面使用状态筛选
+      if (searchForm.status !== -1) {
+        params.status = searchForm.status
+      }
+      // 添加订单编号搜索
+      if (searchForm.orderNo) {
+        params.orderNo = searchForm.orderNo
+      }
     }
     
     console.log('订单查询参数:', params)
@@ -208,7 +255,12 @@ const handleSearch = () => {
 
 // 重置搜索
 const resetSearch = () => {
-  searchForm.status = -1
+  if (currentMenu === 'ship') {
+    searchForm.orderNo = ''
+  } else if (currentMenu === 'order-manage') {
+    searchForm.status = -1
+    searchForm.orderNo = ''
+  }
   currentPage.value = 1
   loadOrderList()
 }
@@ -220,15 +272,49 @@ const handlePageChange = (page) => {
 }
 
 // 查看订单详情
-const handleViewOrder = (order) => {
-  console.log('查看订单详情:', order)
-  // TODO: 实现订单详情查看功能
+const handleViewOrder = async (order) => {
+  try {
+    loading.value = true
+    const res = await getOrderDetail(order.id)
+    if (res.code === 200) {
+      currentOrder.value = res.data
+      detailDialogVisible.value = true
+    } else {
+      ElMessage.error(res.message || '获取订单详情失败')
+    }
+  } catch (e) {
+    ElMessage.error('获取订单详情失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 确认发货
+const confirmDelivery = async () => {
+  try {
+    loading.value = true
+    const res = await updateOrderStatus(currentOrder.value.id, 2)
+    if (res.code === 200) {
+      ElMessage.success('发货成功，订单状态已更新为待收货')
+      detailDialogVisible.value = false
+      loadOrderList()
+    } else {
+      ElMessage.error(res.message || '发货失败')
+    }
+  } catch (e) {
+    ElMessage.error('发货失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 // 组件加载时获取订单列表
 onMounted(() => {
   loadOrderList()
 })
+
+const detailDialogVisible = ref(false)
+const currentOrder = ref(null)
 </script>
 
 <style scoped>
@@ -295,5 +381,9 @@ onMounted(() => {
 
 :deep(.el-input-number) {
   width: 130px;
+}
+
+.search-form .el-form-item {
+  min-width: 180px;
 }
 </style> 
