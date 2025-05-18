@@ -7,16 +7,28 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
-      'vue': 'vue/dist/vue.esm-bundler.js'
+      '@': path.resolve(__dirname, 'src')
     }
   },
   server: {
     port: 5173,
     proxy: {
-      '/user': {
-        target: 'http://localhost:8080',
-        changeOrigin: true
+      '/api': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  },
+  build: {
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor'
+          }
+        }
       }
     }
   }

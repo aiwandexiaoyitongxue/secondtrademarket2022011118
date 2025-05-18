@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/views/Home.vue'
+import SellerHome from '@/views/SellerHome.vue'
 
 const routes = [
   {
@@ -16,8 +17,11 @@ const routes = [
   {
     path: '/seller',
     name: 'SellerHome',
-    component: () => import('@/views/SellerHome.vue'),
-    meta: { requiresAuth: true, requiresRole: 1 }
+    component: SellerHome,
+    meta: {
+      requiresAuth: true,
+      requiresRole: 1
+    }
   },
   {
     path: '/admin',
@@ -44,36 +48,24 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
-  const role = Number(localStorage.getItem('role'))
-
-  if (to.matched.some(record => record.meta && record.meta.requiresAuth)) {
+  // 检查是否需要认证
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    const token = localStorage.getItem('token')
     if (!token) {
-      next({
-        path: '/login',
-        query: { redirect: to.fullPath }
-      })
-    } else if (to.meta.requiresRole && to.meta.requiresRole !== role) {
-      // 如果路由需要特定角色，但用户角色不匹配
-      switch (role) {
-        case 0:
-          next('/user-home')
-          break
-        case 1:
-          next('/seller')
-          break
-        case 2:
-          next('/admin')
-          break
-        default:
-          next('/user-home')
-      }
-    } else {
-      next()
+      next('/login')
+      return
     }
-  } else {
-    next()
+    
+    // 检查角色权限
+    if (to.meta.requiresRole) {
+      const role = localStorage.getItem('role')
+      if (role !== String(to.meta.requiresRole)) {
+        next('/login')
+        return
+      }
+    }
   }
+  next()
 })
 
 export default router 

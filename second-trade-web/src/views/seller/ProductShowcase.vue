@@ -20,7 +20,7 @@
         </el-form-item>
         <el-form-item label="商品状态">
           <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <el-option label="全部" :value="null"></el-option>
+            <el-option label="全部" :value="-1"></el-option>
             <el-option label="待审核" :value="0"></el-option>
             <el-option label="在售" :value="1"></el-option>
             <el-option label="已下架" :value="2"></el-option>
@@ -36,8 +36,8 @@
       <!-- 状态标签快速筛选 -->
       <div class="status-filter" v-if="!hideStatusFilter">
         <el-tag 
-          :type="searchForm.status === null ? 'primary' : 'info'" 
-          @click="filterByStatus(null)" 
+          :type="searchForm.status === -1 ? 'primary' : 'info'" 
+          @click="filterByStatus(-1)" 
           class="status-tag"
           effect="plain"
         >
@@ -73,7 +73,14 @@
     <el-card class="product-list-card">
       <div class="list-header">
         <h3>{{ showTitle }}</h3>
-        <el-button type="primary" @click="goToPublish">发布新商品</el-button>
+        <div class="header-buttons">
+          <template v-if="defaultStatus === 2">
+            <el-button type="primary" @click="goToPublish">发布新商品</el-button>
+          </template>
+          <template v-else>
+            <el-button type="primary" @click="goToPublish">发布新商品</el-button>
+          </template>
+        </div>
       </div>
 
       <div v-if="loading" class="loading-container">
@@ -122,29 +129,36 @@
               </div>
               
               <div class="product-actions">
-                <el-button type="primary" size="small" @click.stop="handleEdit(product)">编辑</el-button>
-                
-                <!-- 根据状态显示不同按钮 -->
-                <template v-if="product.status === 0">
-                  <!-- 待审核状态 - 添加删除按钮 -->
-                  <el-button type="danger" size="small" @click.stop="handleDeleteProduct(product)">删除</el-button>
-                </template>
-                <template v-else-if="product.status === 3">
-                  <!-- 已售罄状态 -->
-                  <el-button type="danger" size="small" @click.stop="handleDeleteProduct(product)">删除</el-button>
-                </template>
-                <template v-else>
-                  <!-- 已审核状态：显示上架/下架按钮 -->
+                <template v-if="defaultStatus === 2">
                   <div class="button-group">
                     <el-button 
-                      :type="product.status === 1 ? 'warning' : 'success'" 
+                      type="success" 
                       size="small" 
                       @click.stop="toggleProductStatus(product)"
                     >
-                      {{ product.status === 1 ? '下架' : '上架' }}
+                      上架
                     </el-button>
-                    <el-button type="danger" size="small" @click.stop="handleDeleteProduct(product)">删除</el-button>
                   </div>
+                </template>
+                <template v-else>
+                  <template v-if="product.status === 0">
+                    <el-button type="danger" size="small" @click.stop="handleDeleteProduct(product)">删除</el-button>
+                  </template>
+                  <template v-else-if="product.status === 3">
+                    <el-button type="danger" size="small" @click.stop="handleDeleteProduct(product)">删除</el-button>
+                  </template>
+                  <template v-else>
+                    <div class="button-group">
+                      <el-button 
+                        :type="product.status === 1 ? 'warning' : 'success'" 
+                        size="small" 
+                        @click.stop="toggleProductStatus(product)"
+                      >
+                        {{ product.status === 1 ? '下架' : '上架' }}
+                      </el-button>
+                      <el-button type="danger" size="small" @click.stop="handleDeleteProduct(product)">删除</el-button>
+                    </div>
+                  </template>
                 </template>
               </div>
             </el-card>
@@ -205,7 +219,7 @@ const categories = [
 const searchForm = reactive({
   keyword: '',
   categoryId: null,
-  status: defaultStatus, // 使用注入的默认状态值
+  status: -1, // 使用-1代替null表示全部
   merchantId: null // 会在组件加载时从localStorage获取当前商家ID
 })
 
@@ -261,12 +275,17 @@ const loadProductList = async () => {
       merchantId: searchForm.merchantId,
       keyword: searchForm.keyword || undefined,
       categoryId: searchForm.categoryId || undefined,
-      status: searchForm.status !== null ? searchForm.status : undefined
+      status: searchForm.status === -1 ? undefined : searchForm.status
     }
     
     // 在常规视图中（不是已下架专区），自动排除已下架商品
-    if (searchForm.status === null && !defaultStatus) {
+    if (searchForm.status === -1 && !defaultStatus) {
       params.excludeStatus = 2; // 排除已下架商品
+    }
+    
+    // 如果当前在已下架商品页面，则只显示已下架商品
+    if (defaultStatus === 2) {
+      params.status = 2;
     }
     
     console.log('请求商品列表参数:', params)
@@ -311,6 +330,14 @@ const processProductData = (item) => {
     imageUrl = mainImage.url
   }
   
+  // 添加调试信息
+  console.log('处理商品数据:', {
+    id: item.id,
+    name: item.name,
+    status: item.status,
+    statusText: getStatusText(item.status)
+  })
+  
   return {
     ...item,
     imageUrl
@@ -327,7 +354,7 @@ const handleSearch = () => {
 const resetSearch = () => {
   searchForm.keyword = ''
   searchForm.categoryId = null
-  searchForm.status = null
+  searchForm.status = -1
   currentPage.value = 1
   loadProductList()
 }
@@ -384,8 +411,9 @@ const toggleProductStatus = (product) => {
           duration: 2000
         })
         
-        // 更新本地数据
-        product.status = newStatus
+        // 重新加载商品列表和统计数据
+        await loadProductList()
+        await loadAllProducts()
       } else {
         ElMessage.error(res.message || `${action}失败`)
       }
@@ -574,6 +602,7 @@ const handleDeleteProduct = (product) => {
   height: 100%;
   transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
+  position: relative;
 }
 
 .product-card:hover {
@@ -733,5 +762,10 @@ const handleDeleteProduct = (product) => {
   margin-left: 5px;
   font-size: 12px;
   opacity: 0.8;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
 }
 </style> 
