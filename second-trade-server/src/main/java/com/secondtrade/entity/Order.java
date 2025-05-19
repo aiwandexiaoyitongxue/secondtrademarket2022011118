@@ -42,6 +42,8 @@ public class Order {
     
     private String refundReason;
     
+    private String rejectReason;
+    
     private Integer autoConfirmDays;
     
     @TableField(fill = FieldFill.INSERT)

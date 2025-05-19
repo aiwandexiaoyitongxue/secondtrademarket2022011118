@@ -52,4 +52,7 @@ public interface OrderService extends IService<Order> {
 
     // 获取已退款订单列表
     List<Order> getRefundedOrders();
+
+    // 驳回退款
+    void rejectRefund(Long id, String reason);
 } 

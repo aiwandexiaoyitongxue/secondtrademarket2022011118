@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Api(tags = "订单管理")
 @RestController
@@ -61,5 +62,20 @@ public class OrderController extends BaseController {
     @GetMapping("/refund/refunded")
     public Result<List<Order>> getRefundedOrders() {
         return Result.success(orderService.getRefundedOrders());
+    }
+
+    @ApiOperation("驳回退款")
+    @PutMapping("/{id}/refund/reject")
+    public Result<Void> rejectRefund(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String reason = body.get("reason");
+        orderService.rejectRefund(id, reason);
+        return Result.success(null);
+    }
+
+    @ApiOperation("删除驳回原因")
+    @DeleteMapping("/{id}/reject-reason")
+    public Result<Void> deleteRejectReason(@PathVariable Long id) {
+        orderService.rejectRefund(id, null);
+        return Result.success(null);
     }
 } 

@@ -157,4 +157,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             .eq(Order::getStatus, 5)
             .orderByDesc(Order::getCreatedTime));
     }
+
+    @Override
+    @Transactional
+    public void rejectRefund(Long id, String reason) {
+        Order order = getById(id);
+        if (order == null) throw new RuntimeException("订单不存在");
+        order.setRejectReason(reason);
+        order.setUpdatedTime(LocalDateTime.now());
+        updateById(order);
+    }
 } 

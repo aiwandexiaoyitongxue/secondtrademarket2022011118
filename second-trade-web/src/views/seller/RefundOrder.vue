@@ -68,36 +68,52 @@
         </el-table>
         <div v-if="currentOrder.status !== 5" class="refund-actions">
           <el-button type="success" @click="handleApprove(currentOrder)">同意退款</el-button>
-          <el-popover placement="top" width="300" v-model:visible="rejectPopoverVisible">
-            <template #default>
-              <div>
-                <el-input v-model="rejectReason" placeholder="请输入驳回原因" />
-                <el-button type="danger" size="small" style="margin-top: 10px;" @click="confirmReject">确认驳回</el-button>
-              </div>
-            </template>
-            <template #reference>
-              <el-button type="danger">驳回</el-button>
-            </template>
-          </el-popover>
+          <el-button type="danger" @click="handleReject(currentOrder)">驳回</el-button>
+        </div>
+        <div v-if="currentOrder.rejectReason" style="margin-bottom: 10px;">
+          <el-alert
+            v-if="currentOrder.rejectReason"
+            type="error"
+            :title="'驳回原因：' + currentOrder.rejectReason"
+            show-icon
+            closable
+            @close="handleDeleteRejectReason(currentOrder.id)"
+            style="margin-bottom: 16px;"
+          />
         </div>
       </div>
       <template #footer>
         <el-button @click="detailDialogVisible = false">关闭</el-button>
       </template>
     </el-dialog>
+    <!-- 新增：填写驳回原因的对话框 -->
+    <el-dialog v-model="rejectDialogVisible" title="填写驳回原因" width="400px" :close-on-click-modal="false">
+      <el-input
+        v-model="rejectReason"
+        type="textarea"
+        placeholder="请输入驳回原因"
+        rows="4"
+        maxlength="200"
+        show-word-limit
+      />
+      <template #footer>
+        <el-button @click="rejectDialogVisible = false">取消</el-button>
+        <el-button type="danger" @click="confirmReject">确认驳回</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getRefundApplyOrders, getRefundedOrders } from '@/api/order'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getRefundApplyOrders, getRefundedOrders, getOrderDetail, rejectRefund, deleteRejectReason } from '@/api/order'
 // import { getRefundApplyOrders, getRefundedOrders, getOrderDetail, approveRefund, rejectRefund } from '@/api/order'
 const loading = ref(false)
 const refundApplyList = ref([])
 const refundedList = ref([])
 const detailDialogVisible = ref(false)
 const currentOrder = ref(null)
-const rejectPopoverVisible = ref(false)
+const rejectDialogVisible = ref(false)
 const rejectReason = ref('')
 const formatDate = (date) => date ? new Date(date).toLocaleString() : ''
 const getStatusText = (status) => {
@@ -122,9 +138,21 @@ const getStatusType = (status) => {
     default: return 'info'
   }
 }
-const showDetail = (order) => {
-  currentOrder.value = order
-  detailDialogVisible.value = true
+const showDetail = async (order) => {
+  loading.value = true
+  try {
+    const res = await getOrderDetail(order.id)
+    if (res.code === 200) {
+      currentOrder.value = res.data
+      detailDialogVisible.value = true
+    } else {
+      ElMessage.error(res.message || '获取订单详情失败')
+    }
+  } catch (e) {
+    ElMessage.error('获取订单详情失败')
+  } finally {
+    loading.value = false
+  }
 }
 const handleApprove = (order) => {
   // TODO: 调用后端接口同意退款
@@ -133,18 +161,49 @@ const handleApprove = (order) => {
 }
 const handleReject = (order) => {
   currentOrder.value = order
-  rejectPopoverVisible.value = true
+  rejectDialogVisible.value = true
 }
-const confirmReject = () => {
+const handleDeleteRejectReason = async (orderId) => {
+  loading.value = true
+  try {
+    const res = await deleteRejectReason(orderId)
+    if (res.code === 200) {
+      ElMessage.success('驳回原因已删除')
+      // 重新拉取订单详情
+      const detailRes = await getOrderDetail(orderId)
+      if (detailRes.code === 200) {
+        currentOrder.value = detailRes.data
+      }
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+const confirmReject = async () => {
   if (!rejectReason.value) {
     ElMessage.warning('请输入驳回原因')
     return
   }
-  // TODO: 调用后端接口驳回退款
-  ElMessage.success('已驳回退款（模拟）')
-  rejectPopoverVisible.value = false
-  detailDialogVisible.value = false
-  rejectReason.value = ''
+  loading.value = true
+  try {
+    const res = await rejectRefund(currentOrder.value.id, rejectReason.value)
+    if (res.code === 200) {
+      ElMessage.success('已驳回退款')
+      rejectDialogVisible.value = false
+      rejectReason.value = ''
+      // 重新拉取订单详情，确保显示数据库最新的驳回原因
+      const detailRes = await getOrderDetail(currentOrder.value.id)
+      if (detailRes.code === 200) {
+        currentOrder.value = detailRes.data
+      }
+    } else {
+      ElMessage.error(res.message || '驳回退款失败')
+    }
+  } finally {
+    loading.value = false
+  }
 }
 onMounted(async () => {
   loading.value = true

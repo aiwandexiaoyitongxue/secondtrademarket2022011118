@@ -49,4 +49,29 @@ export function getRefundedOrders() {
     url: '/api/orders/refund/refunded',
     method: 'get'
   })
+}
+
+// 同意退款
+export function approveRefund(id) {
+  return request({
+    url: `/api/orders/${id}/refund/approve`,
+    method: 'put'
+  })
+}
+
+// 驳回退款
+export function rejectRefund(id, reason) {
+  return request({
+    url: `/api/orders/${id}/refund/reject`,
+    method: 'put',
+    data: { reason }
+  })
+}
+
+// 删除驳回原因
+export function deleteRejectReason(id) {
+  return request({
+    url: `/api/orders/${id}/reject-reason`,
+    method: 'delete'
+  })
 } 
