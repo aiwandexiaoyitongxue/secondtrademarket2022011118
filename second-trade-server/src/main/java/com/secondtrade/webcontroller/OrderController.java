@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Api(tags = "订单管理")
 @RestController
@@ -48,5 +49,17 @@ public class OrderController extends BaseController {
     @GetMapping("/statistics")
     public Result<Object> getOrderStatistics(@RequestParam Long merchantId) {
         return Result.success(orderService.getOrderStatistics(merchantId));
+    }
+
+    @ApiOperation("获取退款申请订单列表")
+    @GetMapping("/refund/apply")
+    public Result<List<Order>> getRefundApplyOrders() {
+        return Result.success(orderService.getRefundApplyOrders());
+    }
+
+    @ApiOperation("获取已退款订单列表")
+    @GetMapping("/refund/refunded")
+    public Result<List<Order>> getRefundedOrders() {
+        return Result.success(orderService.getRefundedOrders());
     }
 } 

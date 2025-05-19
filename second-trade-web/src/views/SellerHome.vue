@@ -61,6 +61,8 @@ import { HomeFilled, GoodsFilled, List, StarFilled, Medal } from '@element-plus/
 import PublishProduct from './seller/PublishProduct.vue'
 import ProductShowcase from './seller/ProductShowcase.vue'
 import OrderTransaction from './seller/OrderTransaction.vue'
+import ShipOrder from './seller/ShipOrder.vue'
+import RefundOrder from './seller/RefundOrder.vue'
 
 // 导航状态
 const activeMenu = ref('overview')
@@ -73,30 +75,9 @@ const currentView = computed(() => {
     case 'product-showcase': return ProductShowcase
     case 'publish': return PublishProduct
     case 'unpublish': return UnpublishProduct
-    case 'ship': 
-      return defineComponent({
-        name: 'ShipOrder',
-        setup() {
-          provide('currentMenu', 'ship')
-          return () => h(OrderTransaction)
-        }
-      })
-    case 'order-manage': 
-      return defineComponent({
-        name: 'OrderManage',
-        setup() {
-          provide('currentMenu', 'order-manage')
-          return () => h(OrderTransaction)
-        }
-      })
-    case 'refund': 
-      return defineComponent({
-        name: 'RefundOrder',
-        setup() {
-          provide('currentMenu', 'refund')
-          return () => h(OrderTransaction)
-        }
-      })
+    case 'ship': return ShipOrder
+    case 'order-manage': return OrderTransaction
+    case 'refund': return RefundOrder
     case 'review': return BuyerReview
     case 'level': return SellerLevel
     default: return Overview

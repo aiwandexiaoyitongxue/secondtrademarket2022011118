@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.secondtrade.entity.Order;
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface OrderService extends IService<Order> {
     
@@ -45,4 +46,10 @@ public interface OrderService extends IService<Order> {
      * @return 统计信息
      */
     Object getOrderStatistics(Long merchantId);
+
+    // 获取退款申请订单列表
+    List<Order> getRefundApplyOrders();
+
+    // 获取已退款订单列表
+    List<Order> getRefundedOrders();
 } 

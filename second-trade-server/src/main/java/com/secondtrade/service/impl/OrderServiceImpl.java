@@ -140,4 +140,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         return statistics;
     }
+
+    @Override
+    public List<Order> getRefundApplyOrders() {
+        // 查询有退款原因但未退款的订单（状态不为5）
+        return list(new LambdaQueryWrapper<Order>()
+            .isNotNull(Order::getRefundReason)
+            .ne(Order::getStatus, 5)
+            .orderByDesc(Order::getCreatedTime));
+    }
+
+    @Override
+    public List<Order> getRefundedOrders() {
+        // 查询已退款订单（状态为5）
+        return list(new LambdaQueryWrapper<Order>()
+            .eq(Order::getStatus, 5)
+            .orderByDesc(Order::getCreatedTime));
+    }
 } 

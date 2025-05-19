@@ -33,4 +33,20 @@ export function updateOrderStatus(id, status) {
     method: 'put',
     params: { status }
   })
+}
+
+// 获取退款申请订单列表
+export function getRefundApplyOrders() {
+  return request({
+    url: '/api/orders/refund/apply',
+    method: 'get'
+  })
+}
+
+// 获取已退款订单列表
+export function getRefundedOrders() {
+  return request({
+    url: '/api/orders/refund/refunded',
+    method: 'get'
+  })
 } 

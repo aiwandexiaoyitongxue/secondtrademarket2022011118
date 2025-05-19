@@ -1,47 +1,25 @@
 <template>
   <div class="order-transaction-container">
-    <el-row :gutter="20" class="top-row">
-      <el-col :span="12">
-        <el-card class="top-card">
-          <h3 class="top-title">订单筛选</h3>
-          <el-form :inline="true" :model="searchForm" class="search-form">
-            <el-form-item label="订单状态">
-              <el-select v-model="searchForm.status" placeholder="请选择状态" style="width: 180px">
-                <el-option label="全部" :value="-1"></el-option>
-                <el-option label="待付款" :value="0"></el-option>
-                <el-option label="待发货" :value="1"></el-option>
-                <el-option label="待收货" :value="2"></el-option>
-                <el-option label="已完成" :value="3"></el-option>
-                <el-option label="已取消" :value="4"></el-option>
-                <el-option label="已退款" :value="5"></el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="订单编号">
-              <el-input v-model="searchForm.orderNo" placeholder="请输入订单编号" clearable></el-input>
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="handleSearch">搜索</el-button>
-              <el-button @click="resetSearch">重置</el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card class="top-card">
-          <h3 class="top-title">订单状态统计</h3>
-          <el-row :gutter="0">
-            <el-col :span="8" v-for="(count, key, idx) in orderStatusStats" :key="key">
-              <div class="status-stat-item">
-                <span class="stat-label">{{ getStatusTextByKey(key) }}</span>
-                <span class="stat-count">{{ count }}</span>
-              </div>
-            </el-col>
-          </el-row>
-        </el-card>
-      </el-col>
-    </el-row>
-
+    <el-card class="filter-card">
+      <div class="filter-header">
+        <h3>订单筛选</h3>
+      </div>
+      <el-form :inline="true" :model="searchForm" class="search-form">
+        <template v-if="currentMenu === 'ship'">
+          <el-form-item label="订单编号">
+            <el-input v-model="searchForm.orderNo" placeholder="请输入订单编号" clearable></el-input>
+          </el-form-item>
+        </template>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button @click="resetSearch">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
     <el-card class="order-list-card">
+      <div class="list-header">
+        <h3>待发货订单</h3>
+      </div>
       <div v-if="loading" class="loading-container">
         <el-skeleton :rows="4" animated />
       </div>
@@ -93,16 +71,6 @@
         />
       </div>
     </el-card>
-
-    <el-card class="hot-product-card" style="margin-top: 20px;">
-      <div class="stats-title">热销商品排行榜</div>
-      <el-table :data="hotProductStats" size="small" border>
-        <el-table-column prop="productId" label="商品ID" width="100" />
-        <el-table-column prop="productName" label="商品名称" />
-        <el-table-column prop="orderCount" label="订单数" width="100" />
-      </el-table>
-    </el-card>
-
     <!-- 订单详情弹窗 -->
     <el-dialog v-model="detailDialogVisible" title="订单详情" width="600px" :close-on-click-modal="false">
       <div v-if="currentOrder">
@@ -122,6 +90,9 @@
             <template #default="scope">¥{{ scope.row.totalAmount?.toFixed(2) }}</template>
           </el-table-column>
         </el-table>
+        <div v-if="currentOrder.status === 1">
+          <el-button type="primary" @click="confirmDelivery">确认发货</el-button>
+        </div>
       </div>
       <template #footer>
         <el-button @click="detailDialogVisible = false">关闭</el-button>
@@ -129,37 +100,19 @@
     </el-dialog>
   </div>
 </template>
-
 <script setup>
-import { ref, reactive, onMounted, computed, inject } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getOrderList, getOrderDetail, updateOrderStatus, getOrderStatistics } from '@/api/order'
-
-const route = useRoute()
+import { getOrderList, getOrderDetail, updateOrderStatus } from '@/api/order'
 const loading = ref(false)
 const orderList = ref([])
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
-
-// 使用注入的 currentMenu
-const currentMenu = inject('currentMenu', 'ship')
-
-// 根据当前菜单确定页面标题
-const pageTitle = computed(() => {
-  switch (currentMenu) {
-    case 'ship': return '待发货订单'
-    case 'order-manage': return '订单管理'
-    case 'refund': return '售后服务'
-    default: return '订单列表'
-  }
-})
-
-// 搜索表单
-const searchForm = reactive({ status: -1, orderNo: '', merchantId: null })
-
-// 获取状态文本
+const detailDialogVisible = ref(false)
+const currentOrder = ref(null)
+const searchForm = reactive({ orderNo: '', merchantId: null })
+const formatDate = (date) => date ? new Date(date).toLocaleString() : ''
 const getStatusText = (status) => {
   switch(status) {
     case 0: return '待付款'
@@ -171,8 +124,6 @@ const getStatusText = (status) => {
     default: return '未知状态'
   }
 }
-
-// 获取状态类型
 const getStatusType = (status) => {
   switch(status) {
     case 0: return 'warning'
@@ -184,14 +135,6 @@ const getStatusType = (status) => {
     default: return 'info'
   }
 }
-
-// 格式化日期
-const formatDate = (date) => {
-  if (!date) return ''
-  return new Date(date).toLocaleString()
-}
-
-// 加载订单列表
 const loadOrderList = async () => {
   loading.value = true
   try {
@@ -205,10 +148,8 @@ const loadOrderList = async () => {
     const params = {
       page: currentPage.value,
       size: pageSize.value,
-      merchantId: searchForm.merchantId
-    }
-    if (searchForm.status !== -1) {
-      params.status = searchForm.status
+      merchantId: searchForm.merchantId,
+      status: 1 // 只查待发货
     }
     if (searchForm.orderNo) {
       params.orderNo = searchForm.orderNo
@@ -226,28 +167,19 @@ const loadOrderList = async () => {
     loading.value = false
   }
 }
-
-// 搜索
 const handleSearch = () => {
   currentPage.value = 1
   loadOrderList()
 }
-
-// 重置搜索
 const resetSearch = () => {
-  searchForm.status = -1
   searchForm.orderNo = ''
   currentPage.value = 1
   loadOrderList()
 }
-
-// 分页
 const handlePageChange = (page) => {
   currentPage.value = page
   loadOrderList()
 }
-
-// 查看订单详情
 const handleViewOrder = async (order) => {
   try {
     loading.value = true
@@ -264,72 +196,34 @@ const handleViewOrder = async (order) => {
     loading.value = false
   }
 }
-
-// 获取订单状态统计
-const loadOrderStats = async () => {
-  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-  if (!userInfo.id) return
-  const res = await getOrderStatistics(userInfo.id)
-  if (res.code === 200) {
-    orderStatusStats.value = res.data.statusCounts || {}
+const confirmDelivery = async () => {
+  try {
+    loading.value = true
+    const res = await updateOrderStatus(currentOrder.value.id, 2)
+    if (res.code === 200) {
+      ElMessage.success('发货成功，订单状态已更新为待收货')
+      detailDialogVisible.value = false
+      loadOrderList()
+    } else {
+      ElMessage.error(res.message || '发货失败')
+    }
+  } catch (e) {
+    ElMessage.error('发货失败')
+  } finally {
+    loading.value = false
   }
 }
-
-// 预留：获取热销商品统计
-const loadHotProductStats = async () => {
-  // TODO: 调用后端接口获取热销商品统计
-  // hotProductStats.value = ...
-}
-
 onMounted(() => {
-  loadOrderStats()
-  loadHotProductStats()
   loadOrderList()
 })
-
-function getStatusTextByKey(key) {
-  const map = {
-    status0: '待付款',
-    status1: '待发货',
-    status2: '待收货',
-    status3: '已完成',
-    status4: '已取消',
-    status5: '已退款'
-  }
-  return map[key] || key
-}
-
-const detailDialogVisible = ref(false)
-const currentOrder = ref(null)
-const orderStatusStats = ref({})
-const hotProductStats = ref([])
 </script>
-
 <style scoped>
 .order-transaction-container {
   padding: 20px;
 }
-
-.top-row {
+.filter-card {
   margin-bottom: 20px;
 }
-
-.top-card {
-  min-height: 120px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.top-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 20px;
-  color: #303133;
-  text-align: left;
-}
-
 .filter-header,
 .list-header {
   display: flex;
@@ -337,94 +231,33 @@ const hotProductStats = ref([])
   align-items: center;
   margin-bottom: 20px;
 }
-
 .filter-header h3,
 .list-header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
 }
-
 .search-form {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
-
 .loading-container,
 .empty-container {
   padding: 30px 0;
   text-align: center;
 }
-
 .pagination-container {
   margin-top: 20px;
   text-align: center;
 }
-
 .order-list {
   margin-top: 20px;
 }
-
 :deep(.el-table) {
   margin-top: 20px;
 }
-
 :deep(.el-table .cell) {
   white-space: nowrap;
-}
-
-.separator {
-  margin: 0 8px;
-  color: #909399;
-}
-
-:deep(.el-date-editor--daterange) {
-  width: 360px;
-}
-
-:deep(.el-input-number) {
-  width: 130px;
-}
-
-.search-form .el-form-item {
-  min-width: 180px;
-}
-
-.status-stats-col {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  height: 100%;
-}
-.status-stats-card {
-  min-height: 120px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  height: 100%;
-}
-.stats-title {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-.status-stat-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.stat-label {
-  font-size: 13px;
-  color: #666;
-}
-.stat-count {
-  font-size: 18px;
-  font-weight: bold;
-  color: #409EFF;
-  margin-left: 2px;
-}
-.hot-product-card {
-  margin-top: 20px;
 }
 </style> 
