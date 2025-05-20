@@ -199,6 +199,7 @@ CREATE TABLE IF NOT EXISTS `order_item` (
     `price` DECIMAL(10,2) NOT NULL COMMENT '商品单价',
     `quantity` INT NOT NULL COMMENT '购买数量',
     `total_amount` DECIMAL(10,2) NOT NULL COMMENT '商品总金额',
+    `rating` TINYINT DEFAULT NULL COMMENT '商品评分（1-5分，买家可评价）',
     `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-未删除，1-已删除',

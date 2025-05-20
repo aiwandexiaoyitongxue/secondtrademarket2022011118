@@ -188,6 +188,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { publishProduct } from '@/api/product'
 import { useRouter } from 'vue-router'
+import { getAllCategories } from '@/api/category'
 
 const router = useRouter()
 const productFormRef = ref(null)
@@ -228,9 +229,18 @@ const clearLoginInfo = () => {
 }
 
 // 初始化获取调试信息
-onMounted(() => {
+onMounted(async () => {
   refreshDebugInfo()
   checkUserRole()
+  // 动态加载分类
+  try {
+    const res = await getAllCategories()
+    if (res.code === 200 && Array.isArray(res.data)) {
+      categoryOptions.value = buildCategoryTree(res.data)
+    }
+  } catch (e) {
+    console.error('加载分类失败', e)
+  }
 })
 
 const productForm = reactive({
@@ -246,42 +256,32 @@ const productForm = reactive({
   description: ''
 })
 
-const categoryOptions = [
-  {
-    value: 1,
-    label: '电子产品',
-    children: [
-      { value: 6, label: '手机' },
-      { value: 7, label: '电脑' },
-      { value: 8, label: '平板' },
-      { value: 9, label: '耳机' }
-    ]
-  },
-  {
-    value: 2,
-    label: '服装服饰',
-    children: [
-      { value: 10, label: '男装' },
-      { value: 11, label: '女装' },
-      { value: 12, label: '鞋靴' }
-    ]
-  },
-  {
-    value: 3,
-    label: '图书教材',
-    children: []
-  },
-  {
-    value: 4,
-    label: '生活用品',
-    children: []
-  },
-  {
-    value: 5,
-    label: '运动器材',
-    children: []
+const categoryOptions = ref([])
+
+// 构建树状结构
+function buildCategoryTree(categories) {
+  const map = {}
+  categories.forEach(cat => {
+    map[cat.id] = { value: cat.id, label: cat.name, children: [], sort: cat.sort }
+  })
+  const tree = []
+  categories.forEach(cat => {
+    if (cat.parentId) {
+      if (map[cat.parentId]) {
+        map[cat.parentId].children.push(map[cat.id])
+      }
+    } else {
+      tree.push(map[cat.id])
+    }
+  })
+  // 按sort排序
+  function sortTree(nodes) {
+    nodes.sort((a, b) => (a.sort || 0) - (b.sort || 0))
+    nodes.forEach(n => n.children && sortTree(n.children))
   }
-]
+  sortTree(tree)
+  return tree
+}
 
 const rules = {
   name: [

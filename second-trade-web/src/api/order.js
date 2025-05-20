@@ -74,4 +74,13 @@ export function deleteRejectReason(id) {
     url: `/api/orders/${id}/reject-reason`,
     method: 'delete'
   })
+}
+
+// 创建订单
+export function createOrder(data) {
+  return request({
+    url: '/api/orders/create',
+    method: 'post',
+    data
+  })
 } 

@@ -37,6 +37,7 @@ com\secondtrade\service\MerchantService.class
 com\secondtrade\mapper\UserMapper.class
 com\secondtrade\common\constants\Constants.class
 com\secondtrade\service\OrderService.class
+com\secondtrade\webcontroller\CategoryController.class
 com\secondtrade\service\ProductService.class
 com\secondtrade\mapper\ProductImageMapper.class
 com\secondtrade\service\UserService.class

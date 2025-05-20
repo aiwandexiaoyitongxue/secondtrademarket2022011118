@@ -8,6 +8,8 @@ import com.secondtrade.entity.OrderItem;
 import com.secondtrade.mapper.OrderMapper;
 import com.secondtrade.mapper.OrderItemMapper;
 import com.secondtrade.service.OrderService;
+import com.secondtrade.service.ProductService;
+import com.secondtrade.entity.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Autowired
     private OrderItemMapper orderItemMapper;
+
+    @Autowired
+    private ProductService productService;
 
     @Override
     public Page<Order> getOrderList(Long merchantId, String orderNo, Integer status, 
@@ -166,5 +171,30 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setRejectReason(reason);
         order.setUpdatedTime(LocalDateTime.now());
         updateById(order);
+    }
+
+    /**
+     * 创建订单并扣减库存、增加销量
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void createOrder(Order order, List<OrderItem> orderItems) {
+        // 保存订单
+        save(order);
+        // 遍历订单项
+        for (OrderItem item : orderItems) {
+            Product product = productService.getProductDetail(item.getProductId());
+            if (product.getStock() < item.getQuantity()) {
+                throw new RuntimeException("商品库存不足: " + product.getName());
+            }
+            // 扣减库存
+            product.setStock(product.getStock() - item.getQuantity());
+            // 增加销量
+            product.setSales(product.getSales() + item.getQuantity());
+            // 更新商品
+            productService.updateProduct(product.getId(), product);
+            // 保存订单项
+            item.setOrderId(order.getId());
+            orderItemMapper.insert(item);
+        }
     }
 } 
