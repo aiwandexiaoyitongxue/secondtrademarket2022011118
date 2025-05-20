@@ -70,7 +70,8 @@ CREATE TABLE IF NOT EXISTS `category` (
     `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-未删除，1-已删除',
     PRIMARY KEY (`id`),
-    KEY `idx_parent_id` (`parent_id`)
+    KEY `idx_parent_id` (`parent_id`),
+    UNIQUE KEY `uk_parent_name` (`parent_id`, `name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品分类表';
 
 -- 商品表
@@ -117,14 +118,46 @@ INSERT INTO `category` (`name`, `level`, `sort`) VALUES
 ('服装服饰', 1, 2),
 ('图书教材', 1, 3),
 ('生活用品', 1, 4),
-('运动器材', 1, 5);
+('文娱商品', 1, 5);
 
 -- 插入二级分类（以电子产品为例）
 INSERT INTO `category` (`name`, `parent_id`, `level`, `sort`) VALUES
-('手机', 1, 2, 1),
-('电脑', 1, 2, 2),
-('平板', 1, 2, 3),
-('耳机', 1, 2, 4);
+('手机', 10, 2, 1),
+('电脑', 10, 2, 2),
+('平板', 10, 2, 3),
+('耳机', 10, 2, 4),
+('数码配件', 10, 2, 5),
+('游戏机', 10, 2, 6);
+
+INSERT INTO `category` (`name`, `parent_id`, `level`, `sort`) VALUES
+('男装', 11, 2, 1),
+('女装', 11, 2, 2),
+('鞋靴', 11, 2, 3),
+('箱包', 11, 2, 4);
+
+
+INSERT INTO `category` (`name`, `parent_id`, `level`, `sort`) VALUES
+('教材教辅', 12, 2, 1),
+('考试用书', 12, 2, 2),
+('工具百科', 12, 2, 3),
+('小说文学', 12, 2, 4);
+
+INSERT INTO `category` (`name`, `parent_id`, `level`, `sort`) VALUES
+('运动器械', 13, 2, 1),
+('清洁用品', 13, 2, 2),
+('收纳整理', 13, 2, 3),
+('装饰摆件', 13, 2, 4),
+('家纺布艺', 13, 2, 5),
+('工具维修', 13, 2, 6);
+
+
+
+INSERT INTO `category` (`name`, `parent_id`, `level`, `sort`) VALUES
+('乐器音响', 14, 2, 1),
+('游戏卡带', 14, 2, 2),
+('手办周边', 14, 2, 3),
+('收藏品', 14, 2, 4),
+('艺术用品', 14, 2, 5);
 
 -- 订单表
 CREATE TABLE IF NOT EXISTS `product_order` (

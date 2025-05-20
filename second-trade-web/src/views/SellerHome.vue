@@ -34,7 +34,7 @@
         
         <el-menu-item index="review">
           <el-icon><StarFilled /></el-icon>
-          <span>买家交易的评价</span>
+          <span>交易评价</span>
         </el-menu-item>
         
         <el-menu-item index="level">
@@ -63,6 +63,7 @@ import ProductShowcase from './seller/ProductShowcase.vue'
 import OrderTransaction from './seller/OrderTransaction.vue'
 import ShipOrder from './seller/ShipOrder.vue'
 import RefundOrder from './seller/RefundOrder.vue'
+import SellerComment from './seller/comment.vue'
 
 // 导航状态
 const activeMenu = ref('overview')
@@ -78,7 +79,7 @@ const currentView = computed(() => {
     case 'ship': return ShipOrder
     case 'order-manage': return OrderTransaction
     case 'refund': return RefundOrder
-    case 'review': return BuyerReview
+    case 'review': return SellerComment
     case 'level': return SellerLevel
     default: return Overview
   }
@@ -111,18 +112,6 @@ const UnpublishProduct = defineComponent({
     provide('showTitle', '已下架商品')
     provide('hideStatusFilter', true)
     return () => h(ProductShowcase)
-  }
-})
-
-const BuyerReview = defineComponent({
-  name: 'BuyerReview',
-  setup() {
-    return () => h('div', [
-      h('el-card', [
-        h('h3', '买家交易的评价'),
-        h('p', '查看买家对交易的评价，形成商家好评率。')
-      ])
-    ])
   }
 })
 
