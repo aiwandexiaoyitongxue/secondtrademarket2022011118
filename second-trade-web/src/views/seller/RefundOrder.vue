@@ -70,16 +70,10 @@
           <el-button type="success" @click="handleApprove(currentOrder)">同意退款</el-button>
           <el-button type="danger" @click="handleReject(currentOrder)">驳回</el-button>
         </div>
-        <div v-if="currentOrder.rejectReason" style="margin-bottom: 10px;">
-          <el-alert
-            v-if="currentOrder.rejectReason"
-            type="error"
-            :title="'驳回原因：' + currentOrder.rejectReason"
-            show-icon
-            closable
-            @close="handleDeleteRejectReason(currentOrder.id)"
-            style="margin-bottom: 16px;"
-          />
+        <div v-if="currentOrder.rejectReason" class="reject-reason-row">
+          <el-icon color="#f56c6c" style="vertical-align: middle;"><CircleCloseFilled /></el-icon>
+          <span class="reject-reason-label">驳回原因：</span>
+          <span class="reject-reason-content">{{ currentOrder.rejectReason }}</span>
         </div>
       </div>
       <template #footer>
@@ -107,6 +101,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getRefundApplyOrders, getRefundedOrders, getOrderDetail, rejectRefund, deleteRejectReason } from '@/api/order'
+import { CircleCloseFilled } from '@element-plus/icons-vue'
 // import { getRefundApplyOrders, getRefundedOrders, getOrderDetail, approveRefund, rejectRefund } from '@/api/order'
 const loading = ref(false)
 const refundApplyList = ref([])
@@ -234,5 +229,19 @@ onMounted(async () => {
   display: flex;
   gap: 10px;
   margin-top: 20px;
+}
+.reject-reason-row {
+  color: #f56c6c;
+  font-weight: 500;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+.reject-reason-label {
+  margin-left: 4px;
+  margin-right: 4px;
+}
+.reject-reason-content {
+  word-break: break-all;
 }
 </style> 
