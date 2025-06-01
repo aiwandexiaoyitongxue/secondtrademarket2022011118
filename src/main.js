@@ -5,21 +5,20 @@ import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import axios from 'axios'
-axios.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = token
-  }
-  return config
-})
-const app = createApp(App)
+import { CanvasRenderer } from 'echarts/renderers'
+import * as echarts from 'echarts/core'
+import VueECharts from 'vue-echarts'
 
 // 注册所有图标
+const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
 app.use(ElementPlus)
 app.use(router)
+
+echarts.use([CanvasRenderer])
+app.component('v-chart', VueECharts)
 
 app.mount('#app')

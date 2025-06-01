@@ -32,12 +32,12 @@ import { ElMessage } from 'element-plus'
 const merchants = ref([])
 
 const fetchMerchants = async () => {
-  const res = await request.get('/admin/merchant/all')
+  const res = await request.get('/api/admin/merchant/all')
   merchants.value = res
 }
 
 const updateLevel = async (row) => {
-await request.post(`/admin/merchant/${row.id}/level`, { level: row.level })
+  await request.post(`/api/admin/merchant/${row.id}/level`, { level: row.level })
   ElMessage.success('等级已更新')
   fetchMerchants()
 }

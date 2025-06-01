@@ -1,4 +1,4 @@
-`<template>
+<template>
   <div class="register-container">
     <el-card class="register-card">
       <h2 class="title">用户注册</h2>
@@ -53,13 +53,21 @@
         <el-form-item label="营业执照" prop="businessLicense" v-if="registerForm.userType === 'business'">
           <el-upload
             class="upload-demo"
-            action="/api/upload"
+            action="/api/upload/public"
             :on-success="handleUploadSuccess"
             :before-upload="beforeUpload">
             <el-button type="primary">上传营业执照</el-button>
           </el-upload>
         </el-form-item>
-
+        <el-form-item label="身份证照片" prop="idCard" v-if="registerForm.userType === 'business'">
+          <el-upload
+            class="upload-demo"
+            action="/api/upload/public"
+            :on-success="handleIdCardUploadSuccess"
+            :before-upload="beforeUpload">
+            <el-button type="primary">上传身份证照片</el-button>
+          </el-upload>
+        </el-form-item>
         <el-form-item label="验证码" prop="captcha">
           <div class="captcha-container">
             <el-input v-model="registerForm.captcha" placeholder="请输入验证码" style="width: 150px;"></el-input>
@@ -99,6 +107,7 @@ const registerForm = reactive({
   gender: 1,
   bankAccount: '',
   businessLicense: '',
+  idCard: '', // 新增
   captcha: ''
 })
 
@@ -204,7 +213,14 @@ const handleUploadSuccess = (response) => {
     ElMessage.error('上传失败')
   }
 }
-
+const handleIdCardUploadSuccess = (response) => {
+  if (response.code === 200) {
+    registerForm.idCard = response.data.url
+    ElMessage.success('上传成功')
+  } else {
+    ElMessage.error('上传失败')
+  }
+}
 const beforeUpload = (file) => {
   const isImage = file.type.startsWith('image/')
   const isLt2M = file.size / 1024 / 1024 < 2
@@ -236,6 +252,10 @@ const handleRegister = async () => {
         // 构造提交数据
         const submitData = { ...registerForm, role }
         delete submitData.userType
+
+        // 打印 userType 和 submitData
+        console.log('userType:', registerForm.userType);
+        console.log('submitData:', submitData);
 
         const response = await register(submitData)
         if (response.code === 200) {

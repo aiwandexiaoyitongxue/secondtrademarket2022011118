@@ -54,14 +54,20 @@ const pendingUsers = ref([])
 const pendingMerchants = ref([])
 
 const fetchPending = async () => {
-  const [proRes, userRes, merchantRes] = await Promise.all([
-    request.get('/admin/products/pending'),
-    request.get('/admin/users/pending'),
-    request.get('/admin/merchants/pending')
-  ])
-  pendingProducts.value = proRes
-  pendingUsers.value = userRes
-  pendingMerchants.value = merchantRes
+  try {
+    const [proRes, userRes, merchantRes] = await Promise.all([
+      request.get('/admin/products/pending'),
+      request.get('/admin/users/pending'),
+      request.get('/admin/merchants/pending')
+    ])
+    
+    // 确保数据是数组
+    pendingProducts.value = Array.isArray(proRes.data) ? proRes.data : []
+    pendingUsers.value = Array.isArray(userRes.data) ? userRes.data : []
+    pendingMerchants.value = Array.isArray(merchantRes.data) ? merchantRes.data : []
+  } catch (error) {
+    console.error('获取待审核数据失败:', error)
+  }
 }
 
 // 添加这三个函数

@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 用户注册
 export function register(data) {
   return request({
-    url: '/user/register',
+    url: '/api/user/register',
     method: 'post',
     data
   })
@@ -12,7 +12,7 @@ export function register(data) {
 // 获取验证码
 export function getCaptcha() {
   return request({
-    url: '/auth/captcha',
+    url: '/api/auth/captcha',
     method: 'get',
     responseType: 'blob'  // 指定响应类型为blob
   })
@@ -21,7 +21,7 @@ export function getCaptcha() {
 // 验证验证码
 export function verifyCaptcha(captcha) {
   return request({
-    url: '/auth/verify-captcha',
+    url: '/api/auth/verify-captcha',
     method: 'post',
     data: { captcha }
   })
@@ -30,7 +30,7 @@ export function verifyCaptcha(captcha) {
 // 用户登录
 export function login(data) {
   return request({
-    url: '/user/login',
+    url: '/api/user/login',
     method: 'post',
     data
   })
@@ -39,7 +39,7 @@ export function login(data) {
 // 退出登录
 export function logout() {
   return request({
-    url: '/auth/logout',
+    url: '/api/auth/logout',
     method: 'post'
   })
 }

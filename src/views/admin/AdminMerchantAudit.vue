@@ -31,7 +31,7 @@ const merchants = ref([])
 
 const fetchMerchants = async () => {
   try {
-    const res = await request.get('/admin/merchants/pending')
+    const res = await request.get('/admin/merchant/pending')
     console.log('获取到的商家数据:', res)
     merchants.value = Array.isArray(res) ? res : []
   } catch (error) {
@@ -44,7 +44,7 @@ const fetchMerchants = async () => {
 onMounted(fetchMerchants)
 async function approve(id) {
   try {
-    await request.post(`/admin/merchants/${id}/approve`)
+    await request.post(`/admin/merchant/${id}/approve`)
     ElMessage.success('审核通过')
     fetchMerchants()
   } catch (error) {
@@ -55,7 +55,7 @@ async function approve(id) {
 
 async function reject(id) {
   try {
-    await request.post(`/admin/merchants/${id}/reject`)
+    await request.post(`/admin/merchant/${id}/reject`)
     ElMessage.success('已驳回')
     fetchMerchants()
   } catch (error) {

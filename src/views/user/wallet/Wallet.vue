@@ -8,7 +8,7 @@
 <style scoped>
 .wallet-layout {
   padding: 24px 0;
-  max-width: 900px;
+  max-width: 100%;
   margin-left: 10px;
   margin-right: auto;
 }

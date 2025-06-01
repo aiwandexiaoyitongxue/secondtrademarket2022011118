@@ -25,6 +25,13 @@ const routes = [
     name: 'ProductDetail',
     component: () => import('@/views/ProductDetail.vue')
   },
+  // 添加结算页面路由
+  {
+    path: '/order/checkout',
+    name: 'OrderCheckout',
+    component: () => import('@/views/OrderCheckout.vue'),
+    meta: { requiresAuth: true }  // 需要登录才能访问
+  },
   {
     path: '/user',
     component: () => import('@/views/user/UserDashboard.vue'), // 主布局（含侧边栏）
@@ -54,19 +61,27 @@ const routes = [
   {
     path: '/admin',
     component: () => import('@/views/admin/AdminDashboard.vue'),
-      children: [
-        { path: 'product-audit', component: () => import('@/views/admin/AdminProductAudit.vue') },
-        { path: 'user-audit', component: () => import('@/views/admin/AdminUserAudit.vue') },
-        { path: 'merchant-audit', component: () => import('@/views/admin/AdminMerchantAudit.vue') },
-        { path: 'pending-list', component: () => import('@/views/admin/AdminPendingList.vue') },
-        { path: 'user-manage', component: () => import('@/views/admin/AdminUserManage.vue') },
-        { path: 'fee-manage', component: () => import('@/views/admin/AdminFeeManage.vue') },
-        { path: 'merchant-level', component: () => import('@/views/admin/AdminMerchantLevel.vue') },
-      ]
-    },
-   
-  
-
+    children: [
+      { path: 'product-audit', component: () => import('@/views/admin/AdminProductAudit.vue') },
+      { path: 'user-audit', component: () => import('@/views/admin/AdminUserAudit.vue') },
+      { path: 'merchant-audit', component: () => import('@/views/admin/AdminMerchantAudit.vue') },
+      { path: 'user-manage', component: () => import('@/views/admin/AdminUserManage.vue') },
+      { path: 'fee-manage', component: () => import('@/views/admin/AdminFeeManage.vue') },
+      { path: 'merchant-level', component: () => import('@/views/admin/AdminMerchantLevel.vue') },
+    ]
+  },
+  // 商家中心
+  {
+    path: '/seller',
+    name: 'SellerHome',
+    component: () => import('@/views/seller/SellerHome.vue'),
+    meta: { requiresAuth: true, requiresRole: 1 }
+  },
+  {
+    path: '/seller/product-detail',
+    name: 'SellerProductDetail',
+    component: () => import('@/views/ProductDetail.vue')
+  },
 ]
 
 const router = createRouter({
@@ -77,6 +92,7 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
+  const userRole = localStorage.getItem('userRole')
   
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!token) {
@@ -84,6 +100,9 @@ router.beforeEach((to, from, next) => {
         path: '/login',
         query: { redirect: to.fullPath }
       })
+    } else if (to.meta.requiresRole && parseInt(userRole) !== to.meta.requiresRole) {
+      // 如果路由需要特定角色，但用户角色不匹配
+      next({ path: '/home' })
     } else {
       next()
     }

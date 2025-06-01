@@ -106,9 +106,32 @@ const fetchUsers = async () => {
 
 // 禁用用户
 async function disable(id) {
-  await request.post(`/admin/users/${id}/disable`)
-  ElMessage.success('已禁用')
-  fetchUsers()
+  try {
+    console.log('开始禁用用户:', id)
+    const res = await request.post(`/admin/users/${id}/disable`)
+    console.log('禁用用户响应:', res)
+    
+    if (res.success) {
+      ElMessage.success('已禁用')
+      fetchUsers()
+    } else {
+      console.error('禁用用户失败，响应:', res)
+      ElMessage.error(res.message || '禁用失败')
+    }
+  } catch (error) {
+    console.error('禁用用户失败:', error)
+    console.error('错误详情:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    })
+    
+    if (error.response?.status === 500) {
+      ElMessage.error(error.response?.data?.message || '服务器内部错误，请稍后重试')
+    } else {
+      ElMessage.error(error.response?.data?.message || error.message || '禁用失败')
+    }
+  }
 }
 
 // 编辑用户

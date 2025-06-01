@@ -32,7 +32,7 @@ const loading = ref(false)
 const fetchReviews = async () => {
   loading.value = true
   try {
-    const res = await request.get('/user/review')
+    const res = await request.get('/api/user/review')
     if (res.success) {
       reviews.value = res.data || []
     } else {

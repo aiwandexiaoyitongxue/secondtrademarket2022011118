@@ -1,6 +1,9 @@
 <template>
   <div class="coupons-page">
-    <h2>我的优惠券</h2>
+    <div class="header-actions">
+      <h2>我的优惠券</h2>
+      <el-button type="primary" @click="handleGetNewUserCoupons" :loading="loading">获取新用户优惠券</el-button>
+    </div>
     <el-table :data="coupons" style="width: 100%">
       <el-table-column prop="amount" label="面额" width="100">
         <template #default="scope">
@@ -28,23 +31,60 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { getUserCoupons } from '@/api/coupon'
 import request from '@/utils/request'
 
 const coupons = ref([])
+const loading = ref(false)
 
-onMounted(async () => {
-  const res = await request.get('/user/coupons/available')
-  if (res.success) {
-    coupons.value = res.coupons
+const loadCoupons = async () => {
+  try {
+    const res = await getUserCoupons()
+    if (res.success) {
+      coupons.value = res.coupons
+    }
+  } catch (error) {
+    console.error('加载优惠券失败:', error)
+    ElMessage.error('加载优惠券失败')
   }
+}
+
+const handleGetNewUserCoupons = async () => {
+  try {
+    loading.value = true
+    const res = await request.post('/api/user/coupons/new-user')
+    if (res.success) {
+      ElMessage.success('获取新用户优惠券成功')
+      loadCoupons()
+    } else {
+      ElMessage.error(res.message || '获取失败')
+    }
+  } catch (error) {
+    console.error('获取新用户优惠券失败:', error)
+    ElMessage.error(error.response?.data?.message || '获取失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadCoupons()
 })
 </script>
 
 <style scoped>
 .coupons-page {
-  max-width: 80%;
+  max-width: 100%;
   margin-left: 10px;
   margin-right: auto;
   padding: 24px 0;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 </style>

@@ -7,7 +7,7 @@
       </div>
       <div class="balance-amount">￥{{ balance }}</div>
       <div class="balance-actions">
-        <el-button type="primary" disabled>充值</el-button>
+        <el-button type="primary" @click="$router.push('/user/wallet/recharge')">充值</el-button>
         <el-button type="success" disabled>提现</el-button>
       </div>
     </el-card>
@@ -48,33 +48,43 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import request from '@/utils/request'
+import { ElMessage } from 'element-plus'
 
 const balance = ref('0.00')
 const points = ref(0)
 const lastRecord = ref(null)
 
-onMounted(async () => {
-  // 查询余额
-  const res = await request.get('/user/wallet/balance')
-  if (res.success) {
-    balance.value = res.balance
+const fetchData = async () => {
+  try {
+    // 查询余额
+    const res = await request.get('/user/wallet')
+    if (res.success) {
+      balance.value = res.data.balance
+    }
+
+    // 查询积分
+    const userRes = await request.get('/user/info')
+    if (userRes.success) {
+      points.value = userRes.data.points
+    }
+
+    // 查询最近一条钱包记录
+    const recordRes = await request.get('/user/wallet/records/all')
+    if (recordRes.success && recordRes.records.length > 0) {
+      lastRecord.value = recordRes.records[0]
+    }
+  } catch (error) {
+    console.error('获取钱包信息失败:', error)
+    ElMessage.error('获取钱包信息失败')
   }
-  // 查询积分
-  const userRes = await request.get('/user/info')
-  if (userRes.success) {
-    points.value = userRes.data.points
-  }
-  // 查询最近一条钱包记录
-  const recordRes = await request.get('/user/wallet/recharge') // 或/payment，或合并接口
-  if (recordRes.success && recordRes.records.length > 0) {
-    lastRecord.value = recordRes.records[0]
-  }
-})
+}
+
+onMounted(fetchData)
 </script>
 
 <style scoped>
 .wallet-balance-page {
-  max-width: 900px;
+  max-width: 100%;
   margin-left: 10px;
   margin-right: auto;
   padding: 24px 0;

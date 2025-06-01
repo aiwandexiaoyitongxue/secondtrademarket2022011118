@@ -28,11 +28,13 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import request from '@/utils/request'
 import { login } from '@/api/user'
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(false)
 const loginFormRef = ref()
 
@@ -57,20 +59,75 @@ const handleLogin = async () => {
     if (valid) {
       loading.value = true
       try {
+        // 清除旧的用户信息
+        localStorage.clear()
+        
         const res = await login(loginForm)
         if (res.success) {
-          // 存储用户信息
-          localStorage.setItem('userInfo', JSON.stringify(res.data))
-          ElMessage.success(res.message || '登录成功')
-          // 登录成功后保存信息
-          localStorage.setItem('token', res.data.token)
-          localStorage.setItem('role', res.data.role)
-          localStorage.setItem('username', res.data.username)
-           // 关键：根据角色跳转
-          if (Number(res.data.role) === 2) {
-            router.push('/admin')
+          // 从响应中获取角色值并确保它是数字类型
+          const roleValue = res.data.role
+          let roleNumber
+          
+          if (typeof roleValue === 'string') {
+            // 如果角色是字符串格式（如 "ROLE_0"），提取数字部分
+            if (roleValue.startsWith('ROLE_')) {
+              roleNumber = parseInt(roleValue.replace('ROLE_', ''), 10)
+            } else {
+              roleNumber = parseInt(roleValue, 10)
+            }
           } else {
-            router.push('/user/dashboard')
+            roleNumber = Number(roleValue)
+          }
+          
+          // 存储用户信息
+          const userInfo = {
+            ...res.data,
+            role: roleNumber
+          }
+          
+          // 保存token，确保不包含 Bearer 前缀
+          const token = res.data.token.replace(/^Bearer\s+/i, '')
+          localStorage.setItem('token', token)
+          localStorage.setItem('userInfo', JSON.stringify(userInfo))
+          localStorage.setItem('userRole', String(roleNumber))
+          localStorage.setItem('username', res.data.username)
+          
+          // 如果是商家用户，先获取商家信息
+          if (roleNumber === 1) {
+            try {
+              const merchantRes = await request.get('/merchant/info')
+              if (merchantRes.success && merchantRes.data) {
+                localStorage.setItem('merchantId', String(merchantRes.data.id))
+              }
+            } catch (error) {
+              console.error('获取商家信息失败:', error)
+              ElMessage.error('获取商家信息失败，请稍后重试')
+              return
+            }
+          }
+          
+          ElMessage.success(res.message || '登录成功')
+          
+          // 获取重定向信息
+          const { redirect, action, productId, quantity } = route.query
+          
+          // 根据用户角色和重定向信息决定跳转路径
+          if (roleNumber === 1) {
+            router.replace('/seller')
+          } else if (roleNumber === 2) {
+            router.replace('/admin')
+          } else if (action === 'buyNow' && redirect === '/checkout') {
+            router.replace({
+              path: redirect,
+              query: {
+                productId: productId,
+                quantity: quantity || 1
+              }
+            })
+          } else if (redirect) {
+            router.replace(redirect)
+          } else {
+            router.replace('/user/dashboard')
           }
         } else {
           ElMessage.error(res.message || '登录失败')
@@ -84,7 +141,6 @@ const handleLogin = async () => {
     }
   })
 }
-
 
 const goToRegister = () => {
   router.push('/register')

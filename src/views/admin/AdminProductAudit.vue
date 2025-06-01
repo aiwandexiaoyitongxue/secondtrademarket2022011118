@@ -9,10 +9,7 @@
         <el-table-column prop="price" label="价格"/>
         <el-table-column prop="status" label="状态">
           <template #default="scope">
-            <span v-if="scope.row.status === 0">待审核</span>
-            <span v-else-if="scope.row.status === 1">在售</span>
-            <span v-else-if="scope.row.status === 2">已下架</span>
-            <span v-else-if="scope.row.status === 3">已售罄</span>
+            <span>待审核</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180">
@@ -37,19 +34,25 @@ const fetchProducts = async () => {
   const res = await request.get('/admin/products/pending')
   console.log('接口返回:', res)  // 第一个日志
   console.log('-------------------')  // 分隔符
-  products.value = res
+  products.value = res.data || []
   console.log('products.value:', products.value)  // 第二个日志
 }
 onMounted(fetchProducts)
 
 async function approve(id) {
-  await request.post(`/admin/products/${id}/approve`)
+  await request.post(`/admin/products/${id}/audit`, {
+    approved: true,
+    reason: ''
+  })
   ElMessage.success('审核通过')
   fetchProducts()
 }
 
 async function reject(id) {
-  await request.post(`/admin/products/${id}/reject`)
+  await request.post(`/admin/products/${id}/audit`, {
+    approved: false,
+    reason: '不符合要求'
+  })
   ElMessage.success('已驳回')
   fetchProducts()
 }

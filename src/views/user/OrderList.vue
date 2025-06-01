@@ -35,8 +35,8 @@
 
     <!-- 订单表格 -->
     <el-table :data="orders" v-loading="loading" style="width: 100%; margin-top: 16px;">
-      <el-table-column prop="orderNo" label="订单编号" width="180" />
-      <el-table-column prop="createdTime" label="下单时间" width="180" />
+      <el-table-column prop="orderNo" label="订单编号" width="200" />
+      <el-table-column prop="createdTime" label="下单时间" width="300" />
       <el-table-column prop="status" label="状态" width="120">
         <template #default="{ row }">
           <el-tag :type="statusTagType(row.status)">
@@ -46,7 +46,7 @@
       </el-table-column>
       <el-table-column prop="totalAmount" label="总金额" width="120" />
       <el-table-column prop="payAmount" label="实付金额" width="120" />
-      <el-table-column label="操作" width="260">
+      <el-table-column label="操作" width="300">
         <template #default="{ row }">
           <el-button size="small" @click="viewDetail(row)">详情</el-button>
           <el-button size="small" v-if="row.status === 0" type="primary" @click="payOrder(row)">去支付</el-button>
@@ -94,6 +94,9 @@
       <el-form-item label="评分">
         <el-rate v-model="commentForm.rating" />
       </el-form-item>
+      <el-form-item label="服务态度">
+        <el-rate v-model="commentForm.serviceRating" />
+      </el-form-item>
       <el-form-item label="内容">
         <el-input v-model="commentForm.content" type="textarea" :rows="4" maxlength="200" show-word-limit />
       </el-form-item>
@@ -110,6 +113,7 @@
 import { ref, onMounted , computed} from 'vue'
 import request from '@/utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 
 const orders = ref([])
 const loading = ref(false)
@@ -121,6 +125,8 @@ const searchForm = ref({
 
 const detailDialogVisible = ref(false)
 const currentOrder = ref(null)
+
+const router = useRouter()
 
 const fetchOrders = async () => {
   loading.value = true
@@ -179,7 +185,7 @@ const statusTagType = (status) => {
 
 const viewDetail = async (row) => {
   try {
-    const res = await request.get('/user/order/detail', { params: { id: row.id } })
+    const res = await request.get(`/api/orders/${row.id}`)
     if (res.success) {
       currentOrder.value = res.data
       detailDialogVisible.value = true
@@ -207,6 +213,7 @@ const commentForm = ref({
   orderId: null,
   orderItemId: null, // 新增
   rating: 5,
+  serviceRating: 5, // 新增
   content: '',
 });
 
@@ -221,8 +228,10 @@ const submitComment = async () => {
       orderId: commentForm.value.orderId,
       orderItemId: commentForm.value.orderItemId, // 新增
       rating: commentForm.value.rating,
+      serviceRating: commentForm.value.serviceRating, // 新增
       content: commentForm.value.content
     };
+    console.log('提交评价参数', data); // 先定义再打印
     const response = await request.post('/user/review/add', data);
     if (response.success) {
       ElMessage.success('评价成功');
@@ -241,7 +250,9 @@ const submitComment = async () => {
 const resetForm = () => {
   commentForm.value = {
     orderId: null,
+    orderItemId: null,
     rating: 5,
+    serviceRating: 5,
     content: '',
   };
 };
@@ -250,6 +261,7 @@ const commentOrder = (order, item) => {
     orderId: order.id,
     orderItemId: item.id,
     rating: 5,
+    serviceRating: 5,
     content: ''
   }
   commentDialogVisible.value = true
@@ -259,33 +271,27 @@ const commentOrder = (order, item) => {
 const applyRefund = async (row) => {
   try {
     await ElMessageBox.confirm('确定要申请退货吗？', '提示', { type: 'warning' });
-    
     // 先获取订单详情
-    const detailRes = await request.get('/user/order/detail', { params: { id: row.id } });
+    const detailRes = await request.get(`/api/orders/${row.id}`);
     if (!detailRes.success) {
       ElMessage.error('获取订单详情失败');
       return;
     }
-    
     const orderDetail = detailRes.data;
     if (!orderDetail.items || orderDetail.items.length === 0) {
       ElMessage.error('订单商品信息不存在');
       return;
     }
-    
     // 如果只有一个商品，直接使用；如果有多个商品，需要让用户选择
     const orderItemId = orderDetail.items.length === 1 ? orderDetail.items[0].id : null;
-    
     console.log('发送的数据:', {
       orderId: row.id,
       orderItemId: orderItemId
     });
-  
     const params = new URLSearchParams();
     params.append('orderId', row.id);
     params.append('orderItemId', orderItemId);
-    
-    const res = await request.post('/user/order/return', params);
+    const res = await request.post('/api/orders/return', params);
     if (res.success) {
       ElMessage.success('退货申请已提交');
       fetchOrders();
@@ -303,7 +309,7 @@ const confirmReceipt = (row) => {
     // 用 URLSearchParams 传参
     const params = new URLSearchParams();
     params.append('orderId', row.id);
-    const res = await request.post('/user/order/confirm', params);
+    const res = await request.post('/api/orders/confirm', params);
     if (res.success) {
       ElMessage.success('已确认收货');
       fetchOrders();
@@ -312,6 +318,22 @@ const confirmReceipt = (row) => {
     }
   }).catch(() => {});
 }
+
+const payOrder = async (row) => {
+  try {
+    // 将订单信息存储到localStorage
+    localStorage.setItem('checkoutItems', JSON.stringify([{
+      productId: row.items[0].productId,
+      quantity: row.items[0].quantity,
+      price: row.items[0].price
+    }]));
+    // 跳转到支付页面
+    router.push('/order/checkout');
+  } catch (error) {
+    ElMessage.error('跳转支付页面失败：' + (error.response?.data?.message || error.message));
+  }
+};
+
 onMounted(() => {
   fetchOrders()
 })
