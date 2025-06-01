@@ -1,7 +1,8 @@
-package com.secondtrade.webcontroller;
+package com.secondtrade.controller;
 
 import com.secondtrade.entity.User;
 import com.secondtrade.service.UserService;
+import com.secondtrade.common.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,9 +41,13 @@ public class AdminUserController {
     // 禁用用户
     @PostMapping("/{id}/disable")
     @PreAuthorize("hasRole('ADMIN')") // 添加权限注解
-    public String disableUser(@PathVariable Long id) {
-        userService.disableUser(id);
-        return "success";
+    public Result<Void> disableUser(@PathVariable Long id) {
+        try {
+            userService.disableUser(id);
+            return Result.success(null);
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     // 查询所有用户
@@ -51,7 +56,8 @@ public class AdminUserController {
     public List<User> getAllUsers() {
         return userService.getAllUsers();
     }
-        // 更新用户信息
+
+    // 更新用户信息
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public String updateUser(@PathVariable Long id, @RequestBody User user) {

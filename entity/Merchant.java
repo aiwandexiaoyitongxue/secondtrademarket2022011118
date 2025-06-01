@@ -17,6 +17,24 @@ public class Merchant {
     private LocalDateTime updatedTime;
     private Integer deleted;
     private Integer status;  // 状态：0-待审核，1-正常，2-禁用
+    private String name;         // 商家名称
+    private String description;  // 商家描述
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     public Integer getStatus() {
         return status;

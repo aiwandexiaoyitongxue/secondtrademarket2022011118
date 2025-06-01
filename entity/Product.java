@@ -1,9 +1,67 @@
 package com.secondtrade.entity;
-
+import com.baomidou.mybatisplus.annotation.TableField;
+import java.math.BigDecimal;
+import java.util.Date;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.IdType;
 public class Product {
+    @TableId(type = IdType.AUTO) // 关键！必须是AUTO
     private Long id;
+    @TableField("merchant_id")
     private Long merchantId;
+    @TableField("category_id")
     private Long categoryId;
+    private String name;
+    private String description;
+    @TableField("original_price")
+    private BigDecimal originalPrice;
+    private Double price;
+    private Integer stock;
+    private Integer sales;
+    @TableField("`condition`")
+    private Integer condition;
+    private String size;
+    @TableField("is_negotiable")
+    private Integer isNegotiable;
+    private Integer status;
+    @TableField("created_time")
+    private Date createdTime;
+    @TableField("updated_time")
+    private Date updatedTime;
+    private Integer deleted;
+    private String image;
+
+    public BigDecimal getOriginalPrice() {
+        return originalPrice;
+    }
+
+    public void setOriginalPrice(BigDecimal originalPrice) {
+        this.originalPrice = originalPrice;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public Date getCreatedTime() {
+        return createdTime;
+    }
+
+    public void setCreatedTime(Date createdTime) {
+        this.createdTime = createdTime;
+    }
+
+    public Date getUpdatedTime() {
+        return updatedTime;
+    }
+
+    public void setUpdatedTime(Date updatedTime) {
+        this.updatedTime = updatedTime;
+    }
 
     public String getImage() {
         return image;
@@ -11,28 +69,6 @@ public class Product {
 
     public void setImage(String image) {
         this.image = image;
-    }
-
-    private String name;
-    private String description;
-    private Double originalPrice;
-    private Double price;
-    private Integer stock;
-    private Integer sales;
-    private Integer condition;
-    private String size;
-    private Integer isNegotiable;
-    private Integer status;
-    private String createdTime;
-    private String updatedTime;
-    private Integer deleted;
-    private String image;
-    public String getCreatedTime() {
-        return createdTime;
-    }
-
-    public void setCreatedTime(String createdTime) {
-        this.createdTime = createdTime;
     }
 
     public Long getId() {
@@ -73,22 +109,6 @@ public class Product {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public Double getOriginalPrice() {
-        return originalPrice;
-    }
-
-    public void setOriginalPrice(Double originalPrice) {
-        this.originalPrice = originalPrice;
-    }
-
-    public Double getPrice() {
-        return price;
-    }
-
-    public void setPrice(Double price) {
-        this.price = price;
     }
 
     public Integer getStock() {
@@ -137,14 +157,6 @@ public class Product {
 
     public void setStatus(Integer status) {
         this.status = status;
-    }
-
-    public String getUpdatedTime() {
-        return updatedTime;
-    }
-
-    public void setUpdatedTime(String updatedTime) {
-        this.updatedTime = updatedTime;
     }
 
     public Integer getDeleted() {

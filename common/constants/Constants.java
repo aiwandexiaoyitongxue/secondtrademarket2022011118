@@ -9,6 +9,11 @@ public class Constants {
     public static final int STATUS_NORMAL = 1;   // 正常
     public static final int STATUS_DISABLED = 2;  // 禁用
 
+    // 商品状态
+    public static final int PRODUCT_STATUS_PENDING = 0;    // 待审核
+    public static final int PRODUCT_STATUS_APPROVED = 1;   // 已通过
+    public static final int PRODUCT_STATUS_REJECTED = 2;   // 已拒绝
+
     // 删除标记
     public static final int NOT_DELETED = 0;  // 未删除
     public static final int IS_DELETED = 1;   // 已删除

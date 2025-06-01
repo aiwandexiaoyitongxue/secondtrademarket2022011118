@@ -40,4 +40,23 @@ List<Product> selectPendingProducts();
     Merchant selectById(Long id);
     @Update("UPDATE merchant SET level=#{level} WHERE id=#{id}")
     int updateMerchantLevel(@Param("id") Long id, @Param("level") Integer level);
+    @Insert("INSERT INTO merchant (user_id, business_license, id_card, name, description, created_time, updated_time, deleted) " +
+        "VALUES (#{userId}, #{businessLicense}, #{idCard}, #{name}, #{description}, NOW(), NOW(), 0)")
+    void insertMerchant(Merchant merchant);
+    /**
+     * 根据用户ID查询商家信息
+     * @param userId 用户ID
+     * @return 商家信息
+     */
+    @Select("SELECT * FROM merchant WHERE user_id = #{userId} AND deleted = 0")
+    Merchant selectByUserId(Long userId);
+
+    @Select("SELECT * FROM merchant WHERE id = #{merchantId} AND deleted = 0")
+    Merchant getMerchantInfoById(@Param("merchantId") Long merchantId);
+
+    @Select("SELECT * FROM merchant WHERE id = #{id} AND deleted = 0")
+    Merchant getMerchantById(@Param("id") Long id);
+
+    @Update("UPDATE merchant SET total_sales = #{totalSales}, updated_time = NOW() WHERE id = #{id}")
+    void updateMerchant(Merchant merchant);
 }

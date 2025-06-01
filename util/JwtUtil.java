@@ -39,4 +39,17 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+    public Long getUserIdFromToken(String token) {
+    Claims claims = parseToken(token);
+    // 你的token里存的是 "id"，类型是Long
+    Object idObj = claims.get("id");
+    if (idObj instanceof Integer) {
+        return ((Integer) idObj).longValue();
+    } else if (idObj instanceof Long) {
+        return (Long) idObj;
+    } else if (idObj instanceof String) {
+        return Long.valueOf((String) idObj);
+    }
+    return null;
+}
 }
