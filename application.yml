@@ -36,8 +36,8 @@ spring:
 
 # 文件上传目录配置
 upload:
-  path: E:/ideaproject/secondtrademarket2022011118/second-trade-server/allimage/publishimage
-  url-prefix: /static/upload/images/
+  path: E:/ideaproject/secondtrademarket2022011118/second-trade-server/allimage
+  url-prefix: /allimage/publishimage/
 
 # MyBatis Plus配置
 mybatis:

@@ -3,24 +3,49 @@ package com.secondtrade.webcontroller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Value;
+import java.util.Map;
+import java.io.File;
+import java.util.UUID;
+import com.secondtrade.util.FileUtil;
+
 @RestController
-@RequestMapping("/api/upload")
-@CrossOrigin // 允许跨域
+@RequestMapping("/upload")
+@CrossOrigin
 public class UploadController {
+    @Value("${upload.path}")
+    private String uploadPath;
+    
+    @Value("${upload.url-prefix}")
+    private String urlPrefix;
 
-    @PostMapping                    
-    @PreAuthorize("hasRole('ADMIN')") // 添加权限注解
-    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file) {
+    @PostMapping("/public")
+    public ResponseEntity<?> publicUpload(@RequestParam("file") MultipartFile file) {
         try {
-            // 这里可以保存文件到本地或云存储
-            // String fileName = file.getOriginalFilename();
-            // file.transferTo(new File("你的保存路径/" + fileName));
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "code", 400,
+                    "message", "请选择文件"
+                ));
+            }
 
-            // 简单返回成功
-            return ResponseEntity.ok().body("上传成功");
+            // 使用 FileUtil 上传文件
+            String url = FileUtil.uploadFile(file, uploadPath, "public");
+            
+            return ResponseEntity.ok().body(Map.of(
+                "code", 200,
+                "data", Map.of(
+                    "url", url
+                ),
+                "message", "上传成功"
+            ));
+            
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("上传失败: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of(
+                "code", 400,
+                "message", "上传失败: " + e.getMessage()
+            ));
         }
     }
 }

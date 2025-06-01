@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.secondtrade.dao.ProductImageMapper">
+    <!-- 插入商品图片 -->
+    <insert id="insert" parameterType="com.secondtrade.entity.ProductImage">
+        INSERT INTO product_image (
+            product_id, url, sort, is_main, created_time, updated_time, deleted
+        ) VALUES (
+            #{productId}, #{url}, #{sort}, #{isMain}, #{createdTime}, #{updatedTime}, #{deleted}
+            )
+    </insert>
+</mapper> 

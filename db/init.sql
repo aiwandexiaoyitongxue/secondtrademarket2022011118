@@ -1,5 +1,5 @@
 -- 创建数据库
-CREATE DATABASE `2022011118` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `2022011118` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE `2022011118`;
 
@@ -21,11 +21,26 @@ CREATE TABLE IF NOT EXISTS `user` (
     `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-未删除，1-已删除',
+    `avatar` VARCHAR(255) COMMENT '头像URL',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_username` (`username`),
     UNIQUE KEY `uk_phone` (`phone`),
     UNIQUE KEY `uk_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+   ALTER TABLE user ADD COLUMN description VARCHAR(255) COMMENT '个人介绍';
+   ALTER TABLE user ADD COLUMN wechat VARCHAR(50) COMMENT '微信号';
+-- 钱包流水记录表
+CREATE TABLE IF NOT EXISTS `wallet_record` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `type` TINYINT NOT NULL COMMENT '类型：1-充值，2-支付，3-提现，4-退款，5-管理员加款',
+    `amount` DECIMAL(10,2) NOT NULL COMMENT '金额',
+    `balance` DECIMAL(10,2) NOT NULL COMMENT '变动后余额',
+    `remark` VARCHAR(255) COMMENT '备注',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='钱包流水记录表';
 
 -- 商家信息表
 CREATE TABLE IF NOT EXISTS `merchant` (
@@ -40,6 +55,8 @@ CREATE TABLE IF NOT EXISTS `merchant` (
     `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-未删除，1-已删除',
+    `name` VARCHAR(100) COMMENT '商家名称',
+    `description` TEXT COMMENT '商家描述',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家信息表';
@@ -88,7 +105,7 @@ CREATE TABLE IF NOT EXISTS `product` (
     `condition` TINYINT NOT NULL COMMENT '商品成色：1-全新，2-九成新，3-八成新，4-七成新，5-六成新及以下',
     `size` VARCHAR(50) COMMENT '尺寸',
     `is_negotiable` TINYINT NOT NULL DEFAULT 0 COMMENT '是否可议价：0-不可议价，1-可议价',
-    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0-待审核，1-在售，2-已下架，3-已售罄',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0-待审核，1-在售，2-已下架，3-已售罄,4-未通过',
     `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-未删除，1-已删除',
@@ -97,7 +114,7 @@ CREATE TABLE IF NOT EXISTS `product` (
     KEY `idx_category_id` (`category_id`),
     KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品表';
-
+ALTER TABLE product ADD COLUMN image VARCHAR(255) COMMENT '商品图片路径';
 -- 商品图片表
 CREATE TABLE IF NOT EXISTS `product_image` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '图片ID',
@@ -118,14 +135,37 @@ INSERT INTO `category` (`name`, `level`, `sort`) VALUES
 ('服装服饰', 1, 2),
 ('图书教材', 1, 3),
 ('生活用品', 1, 4),
-('运动器材', 1, 5);
+('文娱用品', 1, 5);
 
 -- 插入二级分类（以电子产品为例）
 INSERT INTO `category` (`name`, `parent_id`, `level`, `sort`) VALUES
-('手机', 1, 2, 1),
-('电脑', 1, 2, 2),
-('平板', 1, 2, 3),
-('耳机', 1, 2, 4);
+('手机', 21, 2, 1),
+('电脑', 21, 2, 2),
+('平板', 21, 2, 3),
+('耳机', 21, 2, 4);
+
+INSERT INTO `category` (`name`, `parent_id`, `level`, `sort`) VALUES
+('鞋靴', 22, 2, 1),
+('男装', 22, 2, 2),
+('女装', 22, 2, 3),
+('装饰品', 22, 2, 4);
+
+INSERT INTO `category` (`name`, `parent_id`, `level`, `sort`) VALUES
+('考学教辅', 23, 2, 1),
+('小说故事', 23, 2, 2),
+('工具书', 23, 2, 3),
+('杂志期刊', 23, 2, 4);
+
+INSERT INTO `category` (`name`, `parent_id`, `level`, `sort`) VALUES
+('厨具', 24, 2, 1),
+('收纳整理', 24, 2, 2),
+('运动用品', 24, 2, 3),
+('其他', 24, 2, 4);
+INSERT INTO `category` (`name`, `parent_id`, `level`, `sort`) VALUES
+('动漫周边', 25, 2, 1),
+('游戏机', 25, 2, 2),
+('艺术画作', 25, 2, 3),
+('摆件装饰', 25, 2, 4);
 
 -- 订单表
 CREATE TABLE IF NOT EXISTS `product_order` (
@@ -149,6 +189,8 @@ CREATE TABLE IF NOT EXISTS `product_order` (
     `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-未删除，1-已删除',
+    `coupon_id` BIGINT DEFAULT NULL COMMENT '使用的优惠券ID',
+    `coupon_amount` DECIMAL(10,2) DEFAULT NULL COMMENT '优惠券抵扣金额',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_order_no` (`order_no`),
     KEY `idx_user_id` (`user_id`),
@@ -161,17 +203,24 @@ CREATE TABLE IF NOT EXISTS `order_item` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '订单项ID',
     `order_id` BIGINT NOT NULL COMMENT '订单ID',
     `product_id` BIGINT NOT NULL COMMENT '商品ID',
+    `merchant_id` BIGINT NOT NULL COMMENT '商家ID',
     `product_name` VARCHAR(100) NOT NULL COMMENT '商品名称',
     `product_image` VARCHAR(255) NOT NULL COMMENT '商品图片',
     `price` DECIMAL(10,2) NOT NULL COMMENT '商品单价',
     `quantity` INT NOT NULL COMMENT '购买数量',
     `total_amount` DECIMAL(10,2) NOT NULL COMMENT '商品总金额',
+    `refund_status` TINYINT DEFAULT 0 COMMENT '退货状态：0-未申请，1-申请中，2-已同意，3-已拒绝，4-已完成',
+    `refund_apply_time` DATETIME COMMENT '退货申请时间',
+    `refund_reason` VARCHAR(255) COMMENT '退货原因',
+    `refund_audit_time` DATETIME COMMENT '商家审核时间',
+    `refund_audit_remark` VARCHAR(255) COMMENT '商家审核备注',
     `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-未删除，1-已删除',
     PRIMARY KEY (`id`),
     KEY `idx_order_id` (`order_id`),
-    KEY `idx_product_id` (`product_id`)
+    KEY `idx_product_id` (`product_id`),
+    KEY `idx_merchant_id` (`merchant_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单项表';
 
 -- 订单日志表
@@ -196,12 +245,15 @@ CREATE TABLE IF NOT EXISTS `product_review` (
     `product_id` BIGINT NOT NULL COMMENT '商品ID',
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
     `merchant_id` BIGINT NOT NULL COMMENT '商家ID',
+    `product_name` VARCHAR(100) COMMENT '商品名称',
     `rating` TINYINT NOT NULL COMMENT '评分：1-5星',
+    `service_rating` TINYINT NOT NULL DEFAULT 5 COMMENT '服务态度评分：1-5星',
     `content` TEXT COMMENT '评价内容',
     `images` VARCHAR(1000) COMMENT '评价图片，多个图片用逗号分隔',
     `is_anonymous` TINYINT NOT NULL DEFAULT 0 COMMENT '是否匿名：0-否，1-是',
     `reply` TEXT COMMENT '商家回复',
     `reply_time` DATETIME COMMENT '回复时间',
+    `merchant_rating` TINYINT DEFAULT NULL COMMENT '商家对用户的评分：1-5星',
     `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-未删除，1-已删除',
@@ -232,6 +284,7 @@ CREATE TABLE IF NOT EXISTS `merchant_review` (
     KEY `idx_merchant_id` (`merchant_id`),
     KEY `idx_order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家评价表';
+
 -- 购物车表
 CREATE TABLE IF NOT EXISTS `shopping_cart` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '购物车ID',
@@ -249,6 +302,7 @@ CREATE TABLE IF NOT EXISTS `shopping_cart` (
     KEY `idx_product_id` (`product_id`),
     KEY `idx_merchant_id` (`merchant_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='购物车表';
+
 -- 验证码表
 CREATE TABLE IF NOT EXISTS `verification_code` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '验证码ID',
@@ -265,6 +319,51 @@ CREATE TABLE IF NOT EXISTS `verification_code` (
     KEY `idx_type` (`type`),
     KEY `idx_expire_time` (`expire_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='验证码表';
+
+-- 积分明细表
+CREATE TABLE IF NOT EXISTS `points_record` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT NOT NULL,
+    `change` INT NOT NULL COMMENT '变动积分，正为获得，负为消耗',
+    `type` TINYINT NOT NULL COMMENT '类型：1-获得，2-消费',
+    `order_id` BIGINT DEFAULT NULL COMMENT '关联订单',
+    `remark` VARCHAR(255),
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='积分明细表';
+
+-- 用户地址表
+CREATE TABLE IF NOT EXISTS `user_address` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '地址ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `receiver_name` VARCHAR(50) NOT NULL COMMENT '收货人姓名',
+    `receiver_phone` VARCHAR(20) NOT NULL COMMENT '收货人手机号',
+    `province` VARCHAR(50) COMMENT '省',
+    `city` VARCHAR(50) COMMENT '市',
+    `district` VARCHAR(50) COMMENT '区/县',
+    `detail` VARCHAR(255) NOT NULL COMMENT '详细地址',
+    `is_default` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否默认地址：0-否，1-是',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `deleted` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除：0-未删除，1-已删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户收货地址表';
+
+-- 优惠券表
+CREATE TABLE IF NOT EXISTS `coupon` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '优惠券ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `amount` DECIMAL(10,2) NOT NULL COMMENT '抵扣金额',
+    `min_amount` DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT '最低消费金额',
+    `start_time` DATETIME NOT NULL COMMENT '生效时间',
+    `end_time` DATETIME NOT NULL COMMENT '失效时间',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-未使用 1-已使用 2-已过期',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户优惠券表';
 
 -- 系统配置表
 CREATE TABLE IF NOT EXISTS `system_config` (
@@ -292,4 +391,70 @@ INSERT INTO `system_config` (`config_key`, `config_value`, `config_type`, `descr
 ('AUTO_CONFIRM_DAYS', '7', 2, '自动确认收货天数'),
 ('MIN_WITHDRAW_AMOUNT', '100', 2, '最小提现金额'),
 ('MAX_WITHDRAW_AMOUNT', '50000', 2, '最大提现金额');
+CREATE TABLE IF NOT EXISTS `coupon_template` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '模板ID',
+    `name` VARCHAR(100) NOT NULL COMMENT '优惠券名称',
+    `amount` DOUBLE(10,2) NOT NULL COMMENT '抵扣金额',
+    `min_amount` DOUBLE(10,2) NOT NULL DEFAULT 0 COMMENT '最低消费金额',
+    `start_time` DATETIME NOT NULL COMMENT '生效时间',
+    `end_time` DATETIME NOT NULL COMMENT '失效时间',
+    `total_count` INT NOT NULL DEFAULT 0 COMMENT '发放总量，0为不限',
+    `received_count` INT NOT NULL DEFAULT 0 COMMENT '已领取数量',
+    `description` VARCHAR(255) COMMENT '描述',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='可领取优惠券模板表';
+-- 修改 user 表的 wallet_balance 字段
+ALTER TABLE `user` MODIFY COLUMN `wallet_balance` DOUBLE(10,2) NOT NULL DEFAULT 0.00 COMMENT '钱包余额';
+
+-- 修改 product_order 表的金额相关字段
+ALTER TABLE `product_order` 
+    MODIFY COLUMN `total_amount` DOUBLE(10,2) NOT NULL COMMENT '订单总金额',
+    MODIFY COLUMN `pay_amount` DOUBLE(10,2) NOT NULL COMMENT '实付金额',
+    MODIFY COLUMN `points_amount` DOUBLE(10,2) NOT NULL DEFAULT 0.00 COMMENT '积分抵扣金额';
+
+-- 修改 order_item 表的金额相关字段
+ALTER TABLE `order_item` 
+    MODIFY COLUMN `price` DOUBLE(10,2) NOT NULL COMMENT '商品单价',
+    MODIFY COLUMN `total_amount` DOUBLE(10,2) NOT NULL COMMENT '商品总金额';
+
+-- 修改 merchant 表的金额相关字段
+ALTER TABLE `merchant` 
+    MODIFY COLUMN `satisfaction_rate` DOUBLE(3,2) NOT NULL DEFAULT 5.00 COMMENT '满意度评分',
+    MODIFY COLUMN `total_sales` DOUBLE(10,2) NOT NULL DEFAULT 0.00 COMMENT '总销售额';
+
+-- 修改 product 表的金额相关字段
+ALTER TABLE `product` 
+    MODIFY COLUMN `original_price` DOUBLE(10,2) NOT NULL COMMENT '原价',
+    MODIFY COLUMN `price` DOUBLE(10,2) NOT NULL COMMENT '售价';
+
+-- 修改 wallet_record 表的金额相关字段
+ALTER TABLE `wallet_record` 
+    MODIFY COLUMN `amount` DOUBLE(10,2) NOT NULL COMMENT '金额',
+    MODIFY COLUMN `balance` DOUBLE(10,2) NOT NULL COMMENT '变动后余额';
+
+-- 修改 coupon 表的金额相关字段
+ALTER TABLE `coupon` 
+    MODIFY COLUMN `amount` DOUBLE(10,2) NOT NULL COMMENT '抵扣金额',
+    MODIFY COLUMN `min_amount` DOUBLE(10,2) NOT NULL DEFAULT 0 COMMENT '最低消费金额';
+-- 插入测试数据
+INSERT INTO user (username, password, role, avatar, created_time, updated_time, deleted)
+VALUES 
+('merchant1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 1, 'https://example.com/avatar1.jpg', NOW(), NOW(), 0),
+('user1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 0, 'https://example.com/avatar2.jpg', NOW(), NOW(), 0);
+
+INSERT INTO merchant (user_id, name, description, created_time, updated_time, deleted)
+VALUES (1, '测试商家', '这是一个测试商家', NOW(), NOW(), 0);
+
+INSERT INTO product_order (order_no, user_id, merchant_id, total_amount, status, created_time, updated_time, deleted)
+VALUES ('TEST202401010001', 2, 1, 100.00, 4, NOW(), NOW(), 0);
+ALTER TABLE `user`
+ADD COLUMN `merchant_id` BIGINT NULL COMMENT '商家ID';
+INSERT INTO merchant_review (user_id, merchant_id, order_id, rating, content, is_anonymous, created_time, updated_time, deleted)
+VALUES (2, 1, 1, 5, '商家服务态度很好，商品质量也不错！', 0, NOW(), NOW(), 0);
+
+ALTER TABLE coupon
+ADD COLUMN order_id BIGINT DEFAULT NULL COMMENT '关联的订单ID';
 SHOW TABLES; 
+
+-- 添加商家评分列到商品评价表
+ALTER TABLE `product_review` ADD COLUMN IF NOT EXISTS `merchant_rating` TINYINT DEFAULT NULL COMMENT '商家对用户的评分：1-5星';

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.secondtrade.dao.MerchantReviewDao">
+    
+    <select id="selectByMerchantId" resultType="com.secondtrade.entity.MerchantReview">
+        SELECT * FROM merchant_review 
+        WHERE merchant_id = #{merchantId} 
+        AND deleted = 0 
+        <if test="hasReply != null">
+            <if test="hasReply">
+                AND reply IS NOT NULL
+            </if>
+            <if test="!hasReply">
+                AND reply IS NULL
+            </if>
+        </if>
+        ORDER BY created_time DESC 
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countByMerchantId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM merchant_review 
+        WHERE merchant_id = #{merchantId} 
+        AND deleted = 0 
+        <if test="hasReply != null">
+            <if test="hasReply">
+                AND reply IS NOT NULL
+            </if>
+            <if test="!hasReply">
+                AND reply IS NULL
+            </if>
+        </if>
+    </select>
+
+    <select id="getAverageRating" resultType="java.lang.Double">
+        SELECT AVG(rating) FROM merchant_review 
+        WHERE merchant_id = #{merchantId} 
+        AND deleted = 0
+    </select>
+
+    <select id="selectById" resultType="com.secondtrade.entity.MerchantReview">
+        SELECT * FROM merchant_review 
+        WHERE id = #{id} 
+        AND deleted = 0
+    </select>
+
+    <update id="updateReply">
+        UPDATE merchant_review 
+        SET reply = #{reply}, 
+            reply_time = NOW() 
+        WHERE id = #{id} 
+        AND deleted = 0
+    </update>
+</mapper> 
